@@ -72,7 +72,7 @@ bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag
 	setContentSize(Size(SIZE_X, SIZE_Y));
 	//setContentSize(Size(w, h));  //影响：？ 貌似和shader无关
 	setAnchorPoint(Vec2(0.5f, 0.5f));
-
+	/*
 	// Right: normal sprite
 	//Images/grossinis_sister1.png Images/grossinis_sister2.png
 	auto left = Sprite::create("Images/hcf.png"); //noise grossinis_sister2 ,elephant1_Diffuse.png,noise,hcf,powered
@@ -114,6 +114,7 @@ bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag
 	//bg
 	getGLProgramState()->setUniformTexture("u_texture1", left->getTexture());
 	getGLProgramState()->setUniformVec2("u_texture1Size",left->getContentSize());
+	*/
 	return true;
 }
 
@@ -184,11 +185,12 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	//GLfloat pos[len] = { -0.041600, 0.437600, -0.039520, 0.440720, -0.035360, 0.446960, -0.033280, 0.450080, -0.029120, 0.456320 };
 	//const int len = 250;
 	//GLfloat pos[len] = { 0.53, 0.37, 0.54, 0.34, 0.55, 0.31, 0.56, 0.29, 0.56, 0.26, 0.57, 0.23, 0.58, 0.20, 0.59, 0.17, 0.59, 0.14, 0.59, 0.11, 0.60, 0.08, 0.60, 0.05, 0.60, 0.02, 0.60, -0.02, 0.59, -0.05, 0.58, -0.07, 0.57, -0.10, 0.56, -0.13, 0.55, -0.16, 0.54, -0.18, 0.52, -0.20, 0.51, -0.22, 0.49, -0.24, 0.47, -0.25, 0.45, -0.26, 0.43, -0.28, 0.41, -0.28, 0.39, -0.29, 0.37, -0.29, 0.35, -0.30, 0.33, -0.30, 0.31, -0.31, 0.29, -0.31, 0.27, -0.32, 0.25, -0.32, 0.23, -0.32, 0.21, -0.32, 0.19, -0.32, 0.17, -0.32, 0.15, -0.32, 0.13, -0.31, 0.11, -0.30, 0.09, -0.29, 0.07, -0.27, 0.06, -0.24, 0.05, -0.22, 0.03, -0.19, 0.02, -0.17, 0.01, -0.14, 0.01, -0.11, -0.00, -0.08, -0.01, -0.05, -0.02, -0.02, -0.03, 0.01, -0.04, 0.03, -0.04, 0.06, -0.05, 0.09, -0.05, 0.12, -0.06, 0.15, -0.06, 0.18, -0.06, 0.22, -0.06, 0.25, -0.06, 0.28, -0.06, 0.29, -0.08, 0.29, -0.10, 0.30, -0.12, 0.30, -0.15, 0.30, -0.17, 0.30, -0.19, 0.30, -0.21, 0.29, -0.23, 0.28, -0.25, 0.27, -0.27, 0.26, -0.28, 0.24, -0.30, 0.23, -0.32, 0.22, -0.34, 0.21, -0.36, 0.20, -0.38, 0.18, -0.40, 0.17, -0.41, 0.15, -0.43, 0.12, -0.44, 0.10, -0.45, 0.07, -0.46, 0.04, -0.47, 0.02, -0.48, -0.01, -0.50, -0.03, -0.51, -0.05, -0.53, -0.07, -0.55, -0.08, -0.57, -0.10, -0.58, -0.11, -0.60, -0.13, -0.62, -0.15, -0.62, -0.18, -0.62, -0.22, -0.61, -0.24, -0.60, -0.27, -0.58, -0.28, -0.56, -0.30, -0.54, -0.31, -0.52, -0.32, -0.50, -0.32, -0.48, -0.33, -0.46, -0.34, -0.44, -0.34, -0.42, -0.34, -0.40, -0.34, -0.38, -0.34, -0.36, -0.34, -0.34, -0.34, -0.32, -0.34, -0.29, -0.34, -0.27, -0.35, -0.25, -0.35, -0.23, -0.35, -0.21, -0.35, -0.19, -0.36, -0.17, -0.36, -0.15, -0.37, -0.13, -0.37, -0.11, -0.38, -0.09, -0.39 };
-
+	
 	auto glProgram = getGLProgramState()->getGLProgram();
 	int len = pushidx;
 	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
 	glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // (GLfloat*)(&pos[0])
+	/*
 	std::string str = "{";
 	for (int i = 0; i < len;i++)
 	{
@@ -201,7 +203,7 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	str += "};";
 	str += CCString::createWithFormat("%d", len)->getCString();
 	//log("uniform float pos[] = %s",str.c_str());
-
+	*/
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES(1, 6);
@@ -218,6 +220,6 @@ void ShaderNode::pushmousexy(float mx_, float my_)
 	pos[pushidx++] = x;
 	//log("pushidx y:,%d,%f", pushidx, y);
 	pos[pushidx++] = y;
-	log("shader pos len:%d", pushidx);
+	log("pushmousexy shader pos len:%d", pushidx);
 
 }

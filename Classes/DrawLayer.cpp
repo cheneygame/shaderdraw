@@ -32,7 +32,8 @@ void DrawLayer::drawShader()
 	//shadertoy_Draw5 ,纹理方面,画线段
 	//shadertoy_Draw7,线段纹理混合,刮刮乐,多图片背景纹理
 	//shadertoy_Balloons,气球，含有线段和封闭区域填充
-	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw4.fsh"); //
+	//shadertoy_Draw_DL1 ,shadertoy_Draw_DL2,shadertoy_Draw_DL3
+	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL4.fsh"); //
 
 	auto s = Director::getInstance()->getWinSize();
 	sn->setPosition(Vec2(s.width / 4, s.height / 4));
@@ -93,7 +94,7 @@ void DrawLayer::drawDemo()
 	{
 		auto pos1 = touch->getLocation();
 		//log("moved1:%f,%f", pos1.x, pos1.y);
-		node->drawPoint(pos1, 1, color);  //原生自带的画点
+		//node->drawPoint(pos1, 1, color);  //原生自带的画点
 		drawPoint(pos1);
 		//sendSnPos(pos1);  //发送原生自带的画点的坐标
 		//node->drawCubicBezier(100, color);
@@ -151,6 +152,7 @@ void DrawLayer::drawPoint(Vec2 pos, bool draw)
 	{
 		//1、atan（x）表示求的是x的反正切，其返回值为[-pi/2,+pi/2]之间的一个数。
 		//2、atan2（y，x）求的是y / x的反正切，其返回值为[-pi, +pi]之间的一个数。
+		//drawPoint(pos, true);
 		drawByAngle(pos);
 		return;
 
