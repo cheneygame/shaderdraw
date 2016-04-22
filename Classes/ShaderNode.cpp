@@ -16,6 +16,8 @@ ShaderNode::ShaderNode()
 , _resolution(Vec2(0.0f, 0.0f))
 , _time(0.0f)
 {
+	zoneposlen = 0;
+
 }
 
 ShaderNode::~ShaderNode()
@@ -60,7 +62,13 @@ bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag
 	_resolution = Vec2(w, h);
 	getGLProgramState()->setUniformVec2("resolution", _resolution);
 	getGLProgramState()->setUniformVec2("mouse", Vec2(mx,my));
-
+	//left用来发送texture,发送后删除,这个是用来做笔刷的
+	auto left = Sprite::create("Images/pencel2.png"); //noise grossinis_sister2 ,elephant1_Diffuse.png,noise,hcf,powered pencel1
+	addChild(left, 0, 10);
+	left->setPosition(150, 150);
+	getGLProgramState()->setUniformTexture("u_texture1", left->getTexture());
+	getGLProgramState()->setUniformVec2("u_texture1Size", Vec2(left->getContentSize().width, left->getContentSize().height));
+	left->removeFromParent();
 
 	//GLint cc_pos = glGetUniformLocation(getGLProgramState()->getGLProgram(), "CC_POS");
 	//GLfloat pos[5] = { 0, 50, 160, 190, 160 };
@@ -188,8 +196,34 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	
 	auto glProgram = getGLProgramState()->getGLProgram();
 	int len = pushidx;
-	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
-	glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // (GLfloat*)(&pos[0])
+	//glProgram->setUniformLocationWith2fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len/2);  //vec2 数组？
+	//fix 4 len
+	int flen = 4;
+	if(len >=4){
+		GLfloat tpos[4] = {0,0,0,0};
+		tpos[0] = pos[len - 4];
+		tpos[1] = pos[len - 3];
+		tpos[2] = pos[len - 2];
+		tpos[3] = pos[len - 1];
+		//只传送最后4个点
+		//glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), flen);
+		//glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), tpos, flen);  // float 数组
+		//传送全部点
+		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
+		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
+	}
+	else
+	{
+		//传送全部点
+		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
+		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
+	}
+	
+#ifdef ZoneCode
+	//zone部分
+	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
+	glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("zonepos"), zonepos, zoneposlen * 2);  // float 数组
+#endif
 	/*
 	std::string str = "{";
 	for (int i = 0; i < len;i++)
@@ -207,6 +241,12 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES(1, 6);
+
+#ifdef OnlySendOneTime
+	//渲染完成一次，清除点
+	this->clearAllMouseXY();
+#endif
+	
 }
 
 void ShaderNode::pushmousexy(float mx_, float my_)
@@ -218,8 +258,42 @@ void ShaderNode::pushmousexy(float mx_, float my_)
 	float y = (my_ - hh) / hh;
 	//log("pushidx x:,%d,%f", pushidx, x);
 	pos[pushidx++] = x;
-	//log("pushidx y:,%d,%f", pushidx, y);
+	//log("pushidx y:,%d,%f,%f,%f,%f", pushidx, x, y, mx_, my_);
 	pos[pushidx++] = y;
-	log("pushmousexy shader pos len:%d", pushidx);
+	//x,y范围是[-1,1]
+	log("pushidx,x,y:,%d,%f,%f", pushidx, x, y);
+	//log("pushmousexy shader pos len:%d", pushidx);
+	
+}
 
+void ShaderNode::setzonepos(const std::vector<Vec2>& param)
+{
+	zoneposlen = param.size();
+	if (zoneposlen > 3)
+	{
+		for (int i = 0; i < param.size(); i++)
+		{
+			zonepos[i * 2] = param[i].x;
+			zonepos[i * 2 + 1] = param[i].y;
+		}
+
+		/*
+		//zone部分
+		auto glProgram = getGLProgramState()->getGLProgram();
+		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
+		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("zonepos"), zonepos, zoneposlen * 2);  // float 数组
+		*/
+	}
+	
+}
+
+void ShaderNode::setShaderTexture(const std::string& name, Texture2D* texture)
+{
+	//auto glProgram = getGLProgramState()->getGLProgram();
+	getGLProgramState()->setUniformTexture(name, texture);
+}
+
+void ShaderNode::clearAllMouseXY()
+{
+	pushidx = 0;
 }

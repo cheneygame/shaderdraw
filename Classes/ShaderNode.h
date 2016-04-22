@@ -7,7 +7,7 @@
 
 USING_NS_CC;
 //USING_NS_CC_EXT;
-
+#define OnlySendOneTime  //只发送一次就清除
 class ShaderNode : public Node
 {
 public:
@@ -17,7 +17,10 @@ public:
 	virtual void setPosition(const Vec2 &newPosition);
 	virtual void draw(Renderer *renderer, const Mat4 &transform, uint32_t flags) override;
 	void setmousexy(float mx_, float my_){ mx = mx_; my = my_; pushmousexy(mx, my); }
+	void setzonepos(const std::vector<Vec2>& param);
 	void pushmousexy(float mx_, float my_);
+	void clearAllMouseXY();
+	void setShaderTexture(const std::string& name, Texture2D* texture);
 protected:
 	ShaderNode();
 	~ShaderNode();
@@ -35,7 +38,11 @@ protected:
 	CustomCommand _customCommand;
 	float mx, my;
 	int pushidx = 0;
-	static const int maxLen = 1024 * 2;
-	GLfloat pos[maxLen];
+	static const int maxLen = 1024 * 1;
+	GLfloat pos[maxLen];  //pos里面坐标是有特殊计算过的(x/hx)/hx   0-1之前的
+
+	static const int zpmaxLen = 1024 * 1;
+	GLfloat zonepos[zpmaxLen];  //zonepos是实际坐标，0-width之间
+	int zoneposlen = 0;
 };
 #endif
