@@ -12,8 +12,9 @@ USING_NS_CC;
 //#define UseSpriteList  //使用UseSpriteList
 #define ShowShaderLayer  //显示shader层
 //#define drawSendMousePath  //绘制优化完的点,发给shader层的平均点
-#define AvgPtLen 1.0f  //绘制优化完的点间距，即笔刷密度
-
+#define AvgPtLen 2.0f  //绘制优化完的点间距，即笔刷密度
+#define UseSendPosPool //使用发送坐标池,不立即发送，用缓存
+#define UseSendPosPool_OnceAll  //一次发送池内全部内容
 class DrawLayer:public Layer
 {
 	enum Dir{
@@ -30,7 +31,9 @@ public:
 	CREATE_FUNC(DrawLayer);
 	virtual bool init();
 	~DrawLayer();
+	
 protected:
+	virtual void update(float dt);
 	void drawNode();
 	void drawShader();
 	void drawPoint(Vec2 pos,bool draw = false);
@@ -62,6 +65,7 @@ protected:
 	std::vector<Vec2> linePos;
 	//beizer部分
 	std::vector<Vec2> beizerPos;
+	std::deque<Vec2> sendPosPool;
 private:
 	//计算封闭区域用
 	double direction(Vec2 p1, Vec2 p2, Vec2 p3);

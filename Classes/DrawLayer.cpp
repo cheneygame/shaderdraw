@@ -14,6 +14,9 @@ bool DrawLayer::init()
 	drawShader();  //调用shader
 #endif
 #endif
+#ifdef UseSendPosPool
+	scheduleUpdate();
+#endif
 	//drawMatrix();  //点阵
 	return true;
 }
@@ -41,7 +44,8 @@ void DrawLayer::drawShader()
 	//shadertoy_Draw_DL5 ，粗细线段
 	//shadertoy_Draw_DL6 ，shadertoy_Draw_DL7,封闭区域
 	//shadertoy_Draw_YH2，线段，和自身纹理混合
-	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH5.fsh"); //
+	//shadertoy_Draw_YH6，用体贴采样来画线
+	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH6.fsh"); //
 
 	auto s = Director::getInstance()->getWinSize();
 	sn->setPosition(Vec2(s.width / 4, s.height / 4));
@@ -176,13 +180,13 @@ void DrawLayer::drawNode()
 
 void DrawLayer::sendSnPos(Vec2 pos)
 {
-	//auto sn = this->getChildByName("sn");
+#ifndef UseSendPosPool
 	auto sn = this->tsn;
 	if (sn)
 	{
 		dynamic_cast<ShaderNode*>(sn)->setmousexy(pos.x, pos.y);
 	}
-	if (isGetFirstPoses) 
+	if (isGetFirstPoses) //第一次圈定区域的代码
 	{
 		firstPoses.push_back(pos);
 	}
@@ -193,6 +197,18 @@ void DrawLayer::sendSnPos(Vec2 pos)
 #ifdef UseSpriteList
 	addSpriteList(pos.x, pos.y);
 #endif
+
+#else
+	//使用发送坐标缓存
+	sendPosPool.push_back(pos);
+	//
+	if (isGetFirstPoses) //第一次圈定区域的代码
+	{
+		firstPoses.push_back(pos);
+	}
+
+#endif
+	
 }
 
 void DrawLayer::drawPoint(Vec2 pos, bool draw)
@@ -710,8 +726,6 @@ void DrawLayer::updateRenderTexture()
 		auto scpy = Sprite::createWithTexture(s->getTexture());
 		scpy->setFlipY(true);
 		scpy->setAnchorPoint(ccp(0, 0));
-
-		
 	}
 	
 }
@@ -738,6 +752,42 @@ DrawLayer::~DrawLayer()
 	if (tsn != nullptr)
 	{
 		tsn->release();
+	}
+}
+
+void DrawLayer::update(float dt)
+{
+#ifdef UseSendPosPool
+	if (sendPosPool.size() > 0)
+	{
+		log("left sendPosPool size:%d", sendPosPool.size());
+		
+#ifdef UseSendPosPool_OnceAll
+		auto sn = this->tsn;
+		if (sn)
+		{
+			dynamic_cast<ShaderNode*>(sn)->setmousexys(sendPosPool);
+		}
+#else
+		Vec2 pos = sendPosPool.at(0);
+		sendPosPool.pop_front();
+		auto sn = this->tsn;
+		if (sn)
+		{
+			dynamic_cast<ShaderNode*>(sn)->setmousexy(pos.x, pos.y);
+		}
+		log("left sendPosPool1 size:%d", sendPosPool.size());
+#endif //#ifdef UseSendPosPool_OnceAll
+		
+#ifdef UseRenderTexture
+		updateRenderTexture();
+#endif //#ifdef UseRenderTexture
+
+#ifdef UseSpriteList
+		addSpriteList(pos.x, pos.y);
+#endif //#ifdef UseSpriteList
+
+#endif //#ifdef UseSendPosPool
 	}
 }
 

@@ -208,6 +208,7 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 		//只传送最后4个点
 		//glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), flen);
 		//glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), tpos, flen);  // float 数组
+
 		//传送全部点
 		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
 		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
@@ -296,4 +297,14 @@ void ShaderNode::setShaderTexture(const std::string& name, Texture2D* texture)
 void ShaderNode::clearAllMouseXY()
 {
 	pushidx = 0;
+}
+
+void ShaderNode::setmousexys(std::deque<Vec2>& pool)
+{
+	while (pool.size() > 0)
+	{
+		Vec2 temp = pool.at(0);
+		pushmousexy(temp.x, temp.y);
+		pool.pop_front();
+	}
 }

@@ -17,6 +17,7 @@ public:
 	virtual void setPosition(const Vec2 &newPosition);
 	virtual void draw(Renderer *renderer, const Mat4 &transform, uint32_t flags) override;
 	void setmousexy(float mx_, float my_){ mx = mx_; my = my_; pushmousexy(mx, my); }
+	void setmousexys(std::deque<Vec2>& pool);
 	void setzonepos(const std::vector<Vec2>& param);
 	void pushmousexy(float mx_, float my_);
 	void clearAllMouseXY();
