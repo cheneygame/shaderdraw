@@ -5,20 +5,37 @@
 bool DrawLayer::init()
 {
 	CCLayer::init();
+	initShaderPencils();
 	//bg
 	LayerColor* lc = LayerColor::create(Color4B(100,100,100,150),960,640);
 	addChild(lc);
 	drawNode();  //自带画点
 #ifndef BeiZerTest
 #ifdef ShowShaderLayer
-	drawShader();  //调用shader
+	//drawShader();  //调用shader
 #endif
 #endif
+
 #ifdef UseSendPosPool
 	scheduleUpdate();
 #endif
 	//drawMatrix();  //点阵
+	addUI();
 	return true;
+}
+
+void DrawLayer::initShaderPencils()
+{
+	auto s = Director::getInstance()->getWinSize();
+	
+	pencil1 = SPencil1::SPencil1WithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH6.fsh");
+	szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL9.fsh");
+	pencil1->retain();
+	szone->retain();
+	pencil1->setPosition(Vec2(s.width / 4, s.height / 4));
+	pencil1->setContentSize(Size(s.width / 2, s.height / 2));
+	szone->setPosition(Vec2(s.width / 4, s.height / 4));
+	szone->setContentSize(Size(s.width / 2, s.height / 2));
 }
 
 void DrawLayer::drawShader()
@@ -58,18 +75,138 @@ void DrawLayer::drawShader()
 #ifdef UseRenderTexture
 	this->tsn = sn;
 	sn->retain();
+	////zone测试
+	//addChild(sn, 1, "sn");
+	//this->tsn = sn;
 #else
 	addChild(sn, 1, "sn");
 	this->tsn = sn;
 #endif
+	
+}
 
+void DrawLayer::resetShaderHandler()
+{
+	switch (shaderStrIdx)
+	{
+	case ShaderPencilIndex::Pencil1:
+		this->tsn = pencil1;
+		break;
+	case ShaderPencilIndex::Zone:
+		this->tsn = szone;
+		break;
+	default:
+		break;
+	}
+
+
+}
+
+void DrawLayer::addShaderNode()
+{
+	resetShaderHandler();
+#ifdef UseRenderTexture
+
+#else
+	addChild(this->tsn, 1, "sn");
+#endif
+	return;
+
+	//shadertoy_Line1      抛物线
+	//shadertoy_Glow
+	//shadertoy_curvefitting  波浪
+	//  shadertoy_LineSegment  一条线段
+	//shadertoy_LineSegmentWave   平滑波浪
+	//shadertoy_Draw1 shadertoy_AudioVisual
+	//shadertoy_SD  平滑封闭区域
+	//shadertoy_spline
+	//shadertoy_1D_Linear  //多点连接线段
+	//shadertoy_1D_Quadratic  //多点连接线段曲线
+	//shadertoy_mario 超级玛丽
+	//shadertoy_sea 海洋
+	//shadertoy_Draw2,
+	//shadertoy_Draw4,画线段
+	//shadertoy_Draw5 ,纹理方面,画线段
+	//shadertoy_Draw7,线段纹理混合,刮刮乐,多图片背景纹理
+	//shadertoy_Balloons,气球，含有线段和封闭区域填充
+	//shadertoy_Draw_DL1 ,shadertoy_Draw_DL2,shadertoy_Draw_DL3 shadertoy_Draw_DL4 
+	//shadertoy_Draw_DL5 ，粗细线段
+	//shadertoy_Draw_DL6 ，shadertoy_Draw_DL7,封闭区域
+	//shadertoy_Draw_YH2，线段，和自身纹理混合
+	//shadertoy_Draw_YH6，用体贴采样来画线
+	//const char* shaderstrs[] = { "Shaders/shadertoy_Draw_YH6.fsh", "Shaders/shadertoy_Draw_DL7.fsh", };
+	const char* shaderstrs[] = { "Shaders/shadertoy_Draw_DL7.fsh", "Shaders/shadertoy_Draw_YH6.fsh", };  //shaderStrIdx
+	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", shaderstrs[shaderStrIdx]); //
+
+	auto s = Director::getInstance()->getWinSize();
+	sn->setPosition(Vec2(s.width / 4, s.height / 4));
+	sn->setContentSize(Size(s.width / 2, s.height / 2));
+
+	auto moveto = MoveTo::create(1.0f, Vec2(s.width / 4, s.height / 4));
+	auto moveto1 = MoveTo::create(1.0f, Vec2(s.width / 2, s.height / 2));
+	auto sequece = Sequence::createWithTwoActions(moveto, moveto1);
+	//sn->runAction(RepeatForever::create(sequece));
+#ifdef UseRenderTexture
+	this->tsn = sn;
+	sn->retain();
+#else
+	addChild(sn, 1, "sn");
+	this->tsn = sn;
+#endif
+}
+
+void DrawLayer::removeShaderNode()
+{
+	return;
+#ifdef UseRenderTexture
+	if (this->tsn)
+	{
+		this->tsn->release();
+		this->tsn = nullptr;
+	}
+#else
+	if (this->tsn)
+	{
+		removeChildByName("sn");
+		this->tsn = nullptr;
+	}
+#endif
+}
+
+void DrawLayer::menuCallback(Ref* sender)
+{
+	auto tag = ((MenuItemImage*)sender)->getTag();
+	log("tag:%d",tag);
+	shaderStrIdx = ShaderPencilIndex(tag - 101);
+}
+
+//ui
+void DrawLayer::addUI()
+{
+	auto menuCallback1 = [](Ref* sender)->void
+	{
+
+	};
+	auto menuCallback2 = [&](Ref* sender)
+	{
+		
+	};
+	const char* s_SendScore = "Images/SendScoreButton.png";
+	// Image Item
+	auto item1 = MenuItemImage::create(s_SendScore, s_SendScore, CC_CALLBACK_1(DrawLayer::menuCallback, this));
+	auto item2 = MenuItemImage::create(s_SendScore, s_SendScore, CC_CALLBACK_1(DrawLayer::menuCallback, this));
+	auto menu = Menu::create(item1, item2, nullptr);
+	item1->setTag(101);
+	item2->setTag(102);
+	menu->alignItemsVertically();
+	
+	addChild(menu,10,"menu");
+	menu->setPosition(ccp(80, 500));
 }
 
 static int Tag_Node = 100;
 void DrawLayer::drawNode()
 {
-	//this->setTouchEnabled(true);
-	
 	Color4F color = Color4F(CCRANDOM_0_1(), CCRANDOM_0_1(), CCRANDOM_0_1(), 1);
 	DrawNode* node = DrawNode::create();
 	node->drawLine(Vec2(0, 0), Vec2(100, 300), color);
@@ -91,8 +228,10 @@ void DrawLayer::drawNode()
 	int index = 0;
 	el->onTouchBegan = [=](Touch* touch, Event* event)
 	{
+		addShaderNode(); 
+
 		auto pos1 = touch->getLocation();
-		log("ended1:%f,%f", pos1.x, pos1.y);
+		log("onTouchBegan:%f,%f", pos1.x, pos1.y);
 		//from.x = pos1.x;
 		lastDrawPos = Vec2(0,0);
 		lastidx = Vec2(0, 0);
@@ -119,6 +258,38 @@ void DrawLayer::drawNode()
 		}
 #else
 
+		switch (shaderStrIdx)
+		{
+		case ShaderPencilIndex::Zone:
+		{
+			this->autoCreateBeizerPos(); //创建弧线
+			//this->drawFirstPosesLines();  //把所有点用直线连接 起来,画出整个区域轮廓
+			//auto sn = this->getChildByName("sn");
+			auto sn = this->tsn;
+			if (sn)
+			{
+				switch (shaderStrIdx)
+				{
+				case ShaderPencilIndex::Pencil1:
+					dynamic_cast<SPencil1*>(sn)->setzonepos(firstPoses);
+					break;
+				case ShaderPencilIndex::Zone:
+					dynamic_cast<SZone*>(sn)->setzonepos(firstPoses);
+					break;
+				default:
+					break;
+				}
+
+			}
+			firstPoses.clear();
+			//zone模式是 mouseEnd结束后绘制一次，pencil模式是放在update
+			updateRenderTexture();
+		}
+			break;
+		default:
+			break;
+		}
+/*
 #ifdef ZoneCode
 		if (isGetFirstPoses) //第一次花区域
 		{
@@ -128,7 +299,18 @@ void DrawLayer::drawNode()
 			auto sn = this->tsn;
 			if (sn)
 			{
-				dynamic_cast<ShaderNode*>(sn)->setzonepos(firstPoses);
+				switch (shaderStrIdx)
+				{
+				case ShaderPencilIndex::Pencil1:
+					dynamic_cast<SPencil1*>(sn)->setzonepos(firstPoses);
+					break;
+				case ShaderPencilIndex::Zone:
+					dynamic_cast<SZone*>(sn)->setzonepos(firstPoses);
+					break;
+				default:
+					break;
+				}
+				
 			}
 		}
 		else
@@ -153,14 +335,15 @@ void DrawLayer::drawNode()
 				log("NO:%d", linePos.size());
 		}
 #endif
+*/
 #endif
-
+		removeShaderNode();
 	};
 
 	el->onTouchMoved = [=](Touch* touch, Event* event)
 	{
 		auto pos1 = touch->getLocation();
-		//log("moved1:%f,%f", pos1.x, pos1.y);
+		log("moved1:%f,%f", pos1.x, pos1.y);
 #ifdef drawCCSMousePath
 		node->drawPoint(pos1, 1, color);  //原生自带的画点	
 #endif
@@ -168,7 +351,6 @@ void DrawLayer::drawNode()
 		//sendSnPos(pos1);  //发送原生自带的画点的坐标
 		//node->drawCubicBezier(100, color);
 		lastMousePos = pos1;
-
 	};
 
 	auto dispatcher = Director::getInstance()->getEventDispatcher();
@@ -184,7 +366,18 @@ void DrawLayer::sendSnPos(Vec2 pos)
 	auto sn = this->tsn;
 	if (sn)
 	{
-		dynamic_cast<ShaderNode*>(sn)->setmousexy(pos.x, pos.y);
+		switch (shaderStrIdx)
+		{
+		case ShaderPencilIndex::Pencil1:
+			dynamic_cast<SPencil1*>(sn)->setmousexy(pos.x, pos.y);
+			break;
+		case ShaderPencilIndex::Zone:
+			dynamic_cast<SZone*>(sn)->setmousexy(pos.x, pos.y);
+			break;
+		default:
+			break;
+		}
+		
 	}
 	if (isGetFirstPoses) //第一次圈定区域的代码
 	{
@@ -707,6 +900,7 @@ void DrawLayer::autoCreateBeizerPos()
 //rendertexture
 void DrawLayer::updateRenderTexture()
 {
+	//return;  //暂时屏蔽
 	if (this->tsn)
 	{
 		auto size = Director::sharedDirector()->getWinSize();
@@ -719,7 +913,19 @@ void DrawLayer::updateRenderTexture()
 		//CCRenderTexture * rt = CCRenderTexture::create(size.width, size.height);
 		rt->setPosition(ccp(size.width / 2, size.height / 2));
 		rt->begin();
-		this->tsn->setShaderTexture("u_texture2",rt->getSprite()->getTexture());//传递当前已经渲染的部分
+		//传递当前已经渲染的部分,当前纹理
+		switch (shaderStrIdx)
+		{
+		case ShaderPencilIndex::Pencil1:
+			dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
+			break;
+		case ShaderPencilIndex::Zone:
+			dynamic_cast<SZone*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
+			break;
+		default:
+			break;
+		}
+		
 		this->tsn->visit();
 		rt->end();
 		auto s = rt->getSprite();
@@ -757,16 +963,27 @@ DrawLayer::~DrawLayer()
 
 void DrawLayer::update(float dt)
 {
+	
 #ifdef UseSendPosPool
 	if (sendPosPool.size() > 0)
 	{
-		log("left sendPosPool size:%d", sendPosPool.size());
+		//log("left sendPosPool size:%d", sendPosPool.size());
 		
 #ifdef UseSendPosPool_OnceAll
 		auto sn = this->tsn;
 		if (sn)
 		{
-			dynamic_cast<ShaderNode*>(sn)->setmousexys(sendPosPool);
+			switch (shaderStrIdx)
+			{
+			case ShaderPencilIndex::Pencil1:
+				dynamic_cast<SPencil1*>(sn)->setmousexys(sendPosPool);
+				break;
+			case ShaderPencilIndex::Zone:
+				dynamic_cast<SZone*>(sn)->setmousexys(sendPosPool);
+				break;
+			default:
+				break;
+			}
 		}
 #else
 		Vec2 pos = sendPosPool.at(0);
@@ -774,13 +991,29 @@ void DrawLayer::update(float dt)
 		auto sn = this->tsn;
 		if (sn)
 		{
-			dynamic_cast<ShaderNode*>(sn)->setmousexy(pos.x, pos.y);
+			switch (shaderStrIdx)
+			{
+			case ShaderPencilIndex::Pencil1:
+				dynamic_cast<SPencil1*>(sn)->setmousexy(pos.x, pos.y);
+				break;
+			case ShaderPencilIndex::Zone:
+				dynamic_cast<SZone*>(sn)->setmousexy(pos.x, pos.y);
+				break;
+			default:
+				break;
+			}
 		}
 		log("left sendPosPool1 size:%d", sendPosPool.size());
 #endif //#ifdef UseSendPosPool_OnceAll
 		
 #ifdef UseRenderTexture
-		updateRenderTexture();
+if (shaderStrIdx == ShaderPencilIndex::Zone)  //zong模式 不能每帧触发
+{
+	return;
+}else if (shaderStrIdx == ShaderPencilIndex::Pencil1)  //zong模式 不能每帧触发
+{
+	updateRenderTexture();
+}	
 #endif //#ifdef UseRenderTexture
 
 #ifdef UseSpriteList

@@ -1,8 +1,8 @@
-#include"ShaderNode.h"
+#include"SPencil1.h"
 
 ///---------------------------------------
 // 
-// ShaderNode
+// SPencil1
 // 
 ///---------------------------------------
 enum
@@ -11,7 +11,7 @@ enum
 	SIZE_Y = 256,
 };
 
-ShaderNode::ShaderNode()
+SPencil1::SPencil1()
 :_center(Vec2(0.0f, 0.0f))
 , _resolution(Vec2(0.0f, 0.0f))
 , _time(0.0f)
@@ -20,20 +20,20 @@ ShaderNode::ShaderNode()
 
 }
 
-ShaderNode::~ShaderNode()
+SPencil1::~SPencil1()
 {
 }
 
-ShaderNode* ShaderNode::shaderNodeWithVertex(const std::string &vert, const std::string& frag)
+SPencil1* SPencil1::SPencil1WithVertex(const std::string &vert, const std::string& frag)
 {
-	auto node = new (std::nothrow) ShaderNode();
+	auto node = new (std::nothrow) SPencil1();
 	node->initWithVertex(vert, frag);
 	node->autorelease();
 
 	return node;
 }
 
-bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag)
+bool SPencil1::initWithVertex(const std::string &vert, const std::string &frag)
 {
 #if CC_ENABLE_CACHE_TEXTURE_DATA
 	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
@@ -70,63 +70,15 @@ bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag
 	getGLProgramState()->setUniformVec2("u_texture1Size", Vec2(left->getContentSize().width, left->getContentSize().height));
 	left->removeFromParent();
 
-	//GLint cc_pos = glGetUniformLocation(getGLProgramState()->getGLProgram(), "CC_POS");
-	//GLfloat pos[5] = { 0, 50, 160, 190, 160 };
-	//auto glProgram = getGLProgramState()->getGLProgram();
-	//glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, 5);  // (GLfloat*)(&pos[0])
-
 	scheduleUpdate();
 
 	setContentSize(Size(SIZE_X, SIZE_Y));
-	//setContentSize(Size(w, h));  //影响：？ 貌似和shader无关
 	setAnchorPoint(Vec2(0.5f, 0.5f));
-	/*
-	// Right: normal sprite
-	//Images/grossinis_sister1.png Images/grossinis_sister2.png
-	auto left = Sprite::create("Images/hcf.png"); //noise grossinis_sister2 ,elephant1_Diffuse.png,noise,hcf,powered
-	addChild(left, 0, 10);
-	left->setPosition(150, 150);
-
-	auto right = Sprite::create("Images/hcf.png"); //noise grossinis_sister2,hcf
-	addChild(right, 0, 10);
-	right->setPosition(330, 150);
-
-	auto right1 = Sprite::create("Images/hcf.png"); //noise grossinis_sister2,hcf ,qqpic1.jpg,mv
-	addChild(right1, 0, 10);
-	right1->setPosition(500, 150);
-
-	//right用的shader,shadertoy_Draw8,
-	//shadertoy_Draw9 马赛克
-	//shadertoy_Draw10 马赛克02
-	//这个shader是针对某个sprite
-	auto glprogram = GLProgram::createWithFilenames("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw10.fsh");
-	auto glprogramstate = GLProgramState::getOrCreateWithGLProgram(glprogram);
-	right->setGLProgramState(glprogramstate);
-
-	//right
-	glprogramstate->setUniformTexture("u_texture1", left->getTexture());
-	glprogramstate->setUniformVec2("u_texture1Size", left->getContentSize());
-	glprogramstate->setUniformFloat("u_interpolate", 0.5);
-	glprogramstate->setUniformInt("intensity", 15);
-	glprogramstate->setUniformInt("intensity2", 2);
-	//right1
-	auto glprogram1 = GLProgram::createWithFilenames("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw10.fsh");
-	auto glprogramstate1 = GLProgramState::getOrCreateWithGLProgram(glprogram1);
-	right1->setGLProgramState(glprogramstate1);
-
-	glprogramstate1->setUniformTexture("u_texture1", left->getTexture());
-	glprogramstate1->setUniformVec2("u_texture1Size", left->getContentSize());
-	glprogramstate1->setUniformFloat("u_interpolate", 0.5);
-	glprogramstate1->setUniformInt("intensity", 40);
-	glprogramstate1->setUniformInt("intensity2", 10);
-	//bg
-	getGLProgramState()->setUniformTexture("u_texture1", left->getTexture());
-	getGLProgramState()->setUniformVec2("u_texture1Size",left->getContentSize());
-	*/
+	
 	return true;
 }
 
-void ShaderNode::loadShaderVertex(const std::string &vert, const std::string &frag)
+void SPencil1::loadShaderVertex(const std::string &vert, const std::string &frag)
 {
 	auto fileUtiles = FileUtils::getInstance();
 
@@ -149,12 +101,12 @@ void ShaderNode::loadShaderVertex(const std::string &vert, const std::string &fr
 	setGLProgramState(glprogramstate);
 }
 
-void ShaderNode::update(float dt)
+void SPencil1::update(float dt)
 {
 	_time += dt;
 }
 
-void ShaderNode::setPosition(const Vec2 &newPosition)
+void SPencil1::setPosition(const Vec2 &newPosition)
 {
 	Node::setPosition(newPosition);
 	auto position = getPosition();
@@ -162,14 +114,14 @@ void ShaderNode::setPosition(const Vec2 &newPosition)
 	getGLProgramState()->setUniformVec2("center", _center);
 }
 
-void ShaderNode::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
+void SPencil1::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
 {
 	_customCommand.init(_globalZOrder, transform, flags);
-	_customCommand.func = CC_CALLBACK_0(ShaderNode::onDraw, this, transform, flags);
+	_customCommand.func = CC_CALLBACK_0(SPencil1::onDraw, this, transform, flags);
 	renderer->addCommand(&_customCommand);
 }
 
-void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
+void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 {
 	auto size = Director::sharedDirector()->getWinSize();
 		//float w = size, h = SIZE_Y;  //可视窗口，view的大小
@@ -219,7 +171,9 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
 		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
 	}
-	
+	//color
+	//brushColorF
+	glProgram->setUniformLocationWith4f((GLint)glProgram->getUniformLocationForName("scolor"), brushColorF.r, brushColorF.g, brushColorF.b, brushColorF.a);
 //#ifdef ZoneCode
 	//zone部分
 	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
@@ -250,7 +204,7 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	
 }
 
-void ShaderNode::pushmousexy(float mx_, float my_)
+void SPencil1::pushmousexy(float mx_, float my_)
 {
 	auto size = Director::sharedDirector()->getWinSize();
 	float hw = size.width / 2;
@@ -267,7 +221,7 @@ void ShaderNode::pushmousexy(float mx_, float my_)
 	
 }
 
-void ShaderNode::setzonepos(const std::vector<Vec2>& param)
+void SPencil1::setzonepos(const std::vector<Vec2>& param)
 {
 	zoneposlen = param.size();
 	if (zoneposlen > 3)
@@ -288,18 +242,18 @@ void ShaderNode::setzonepos(const std::vector<Vec2>& param)
 	
 }
 
-void ShaderNode::setShaderTexture(const std::string& name, Texture2D* texture)
+void SPencil1::setShaderTexture(const std::string& name, Texture2D* texture)
 {
 	//auto glProgram = getGLProgramState()->getGLProgram();
 	getGLProgramState()->setUniformTexture(name, texture);
 }
 
-void ShaderNode::clearAllMouseXY()
+void SPencil1::clearAllMouseXY()
 {
 	pushidx = 0;
 }
 
-void ShaderNode::setmousexys(std::deque<Vec2>& pool)
+void SPencil1::setmousexys(std::deque<Vec2>& pool)
 {
 	while (pool.size() > 0)
 	{

@@ -17,6 +17,7 @@ uniform vec2 mouse;
 uniform sampler2D u_texture1; //额外贴图
 uniform vec2 u_texture1Size;  //额外贴图大小
 uniform sampler2D u_texture2; //额外贴图
+uniform vec4 scolor;
 
 varying vec4 v_fragmentColor;
 varying vec2 v_texCoord;
@@ -157,14 +158,15 @@ vec4 getpixelInRect(vec2 origin,vec2 npos)
 		{
 			color2 = texture2D(u_texture2,v_texCoord);
 		}else{
-			color2 = vec4(1,0,1,color2.w); //紫色
+			//color2 = vec4(1,0,1,color2.w); //紫色
+			color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色	
 		}
 		return color2;
 	}else{
 		vec4 color3 = texture2D(u_texture2,v_texCoord);
 		return color3;
 	}
-	return vec4(1,1,0,0);
+	return vec4(1,0,0,0);
 }
 
 #define minw 0.003

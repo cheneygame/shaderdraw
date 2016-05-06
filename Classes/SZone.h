@@ -1,6 +1,6 @@
 
-#ifndef _ShaderNode_H_
-#define _ShaderNode_H_
+#ifndef _SZone_H_
+#define _SZone_H_
 #include "ui/CocosGUI.h"
 
 #include "cocos2d.h"
@@ -8,12 +8,11 @@
 USING_NS_CC;
 //USING_NS_CC_EXT;
 #define OnlySendOneTime  //只发送一次就清除
-class ShaderNode : public Node
+class SZone : public Node
 {
-
 public:
-	CREATE_FUNC(ShaderNode);
-	static ShaderNode* shaderNodeWithVertex(const std::string &vert, const std::string &frag);
+	CREATE_FUNC(SZone);
+	static SZone* SZoneWithVertex(const std::string &vert, const std::string &frag);
 
 	virtual void update(float dt);
 	virtual void setPosition(const Vec2 &newPosition);
@@ -25,8 +24,8 @@ public:
 	void clearAllMouseXY();
 	void setShaderTexture(const std::string& name, Texture2D* texture);
 protected:
-	ShaderNode();
-	~ShaderNode();
+	SZone();
+	~SZone();
 
 	bool initWithVertex(const std::string &vert, const std::string &frag);
 	void loadShaderVertex(const std::string &vert, const std::string &frag);

@@ -1,6 +1,6 @@
 
-#ifndef _ShaderNode_H_
-#define _ShaderNode_H_
+#ifndef _SPencil1_H_
+#define _SPencil1_H_
 #include "ui/CocosGUI.h"
 
 #include "cocos2d.h"
@@ -8,12 +8,11 @@
 USING_NS_CC;
 //USING_NS_CC_EXT;
 #define OnlySendOneTime  //只发送一次就清除
-class ShaderNode : public Node
+class SPencil1 : public Node
 {
-
 public:
-	CREATE_FUNC(ShaderNode);
-	static ShaderNode* shaderNodeWithVertex(const std::string &vert, const std::string &frag);
+	CREATE_FUNC(SPencil1);
+	static SPencil1* SPencil1WithVertex(const std::string &vert, const std::string &frag);
 
 	virtual void update(float dt);
 	virtual void setPosition(const Vec2 &newPosition);
@@ -24,9 +23,10 @@ public:
 	void pushmousexy(float mx_, float my_);
 	void clearAllMouseXY();
 	void setShaderTexture(const std::string& name, Texture2D* texture);
+	void setBrushCF(Color4F color){ brushColorF = color; };
 protected:
-	ShaderNode();
-	~ShaderNode();
+	SPencil1();
+	~SPencil1();
 
 	bool initWithVertex(const std::string &vert, const std::string &frag);
 	void loadShaderVertex(const std::string &vert, const std::string &frag);
@@ -47,5 +47,7 @@ protected:
 	static const int zpmaxLen = 1024 * 1;
 	GLfloat zonepos[zpmaxLen];  //zonepos是实际坐标，0-width之间
 	int zoneposlen = 0;
+
+	Color4F brushColorF = Color4F::BLUE;// Color4F::MAGENTA;
 };
 #endif

@@ -3,14 +3,17 @@
 
 #include "cocos2d.h"
 #include "ShaderNode.h"
+#include"SPencil1.h"
+#include"SZone.h"
+
 USING_NS_CC;
 
 //#define BeiZerTest 1  //开启表示测试berzer数组，点击4个点
-//#define ZoneCode  //绘制封闭区域模式
+#define ZoneCode  //绘制封闭区域模式
 //#define drawCCSMousePath  //绘制cocos鼠标点
 #define UseRenderTexture  //使用RenderTexture
 //#define UseSpriteList  //使用UseSpriteList
-#define ShowShaderLayer  //显示shader层
+//#define ShowShaderLayer  //显示shader层
 //#define drawSendMousePath  //绘制优化完的点,发给shader层的平均点
 #define AvgPtLen 2.0f  //绘制优化完的点间距，即笔刷密度
 #define UseSendPosPool //使用发送坐标池,不立即发送，用缓存
@@ -27,15 +30,23 @@ class DrawLayer:public Layer
 		Down,
 		Down_Right,
 	};
+	enum ShaderPencilIndex{
+		Pencil1 = 0,
+		Zone,
+	};
 public:
 	CREATE_FUNC(DrawLayer);
 	virtual bool init();
 	~DrawLayer();
-	
+	void setBrushCF(Color4F brushColorF){ pencil1->setBrushCF(brushColorF); };
 protected:
 	virtual void update(float dt);
+	void initShaderPencils();
 	void drawNode();
 	void drawShader();
+	void addUI();
+	void addShaderNode();
+	void removeShaderNode();
 	void drawPoint(Vec2 pos,bool draw = false);
 	void drawMatrix();
 	void drawByDir(int dir, Vec2 mousepos);
@@ -43,11 +54,12 @@ protected:
 	void drawByFixLen(Vec2 mousepos);
 	void sendSnPos(Vec2 pos);
 	void addSpriteList(float x, float y);
+	void resetShaderHandler();
 	/*virtual bool onTouchBegan(Touch *touch, Event *unused_event);
 	virtual void onTouchMoved(Touch *touch, Event *unused_event);
 	virtual void onTouchEnded(Touch *touch, Event *unused_event);
 	virtual void onTouchCancelled(Touch *touch, Event *unused_event);*/
-
+	void menuCallback(Ref* sender);
 	const float cellw = 6.0f;
 	const float cellh = cellw;
 	std::set<Vec2> poses; //存放idx,网格模式用的
@@ -77,8 +89,14 @@ private:
 	void startBeizer();
 	void autoCreateBeizerPos();
 	void updateRenderTexture();
-	ShaderNode* tsn = nullptr;
+	Node* tsn = nullptr;
 	CCRenderTexture * rt = nullptr;
+	ShaderPencilIndex shaderStrIdx = Zone;  //Zone Pencil1
+
+	SPencil1* pencil1 = nullptr;
+	SZone*	szone = nullptr;
+
+	Color4F brushColorF = Color4F::BLUE;
 };
 
 #endif
