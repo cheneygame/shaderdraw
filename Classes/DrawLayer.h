@@ -5,7 +5,7 @@
 #include "ShaderNode.h"
 #include"SPencil1.h"
 #include"SZone.h"
-
+#include"SPencilClr.h"
 USING_NS_CC;
 
 //#define BeiZerTest 1  //开启表示测试berzer数组，点击4个点
@@ -15,7 +15,7 @@ USING_NS_CC;
 //#define UseSpriteList  //使用UseSpriteList
 //#define ShowShaderLayer  //显示shader层
 //#define drawSendMousePath  //绘制优化完的点,发给shader层的平均点
-#define AvgPtLen 2.0f  //绘制优化完的点间距，即笔刷密度
+#define AvgPtLen 1.0f  //绘制优化完的点间距，即笔刷密度
 #define UseSendPosPool //使用发送坐标池,不立即发送，用缓存
 #define UseSendPosPool_OnceAll  //一次发送池内全部内容
 class DrawLayer:public Layer
@@ -33,12 +33,24 @@ class DrawLayer:public Layer
 	enum ShaderPencilIndex{
 		Pencil1 = 0,
 		Zone,
+		PencilClr,
 	};
 public:
 	CREATE_FUNC(DrawLayer);
 	virtual bool init();
 	~DrawLayer();
-	void setBrushCF(Color4F brushColorF){ pencil1->setBrushCF(brushColorF); };
+	void setBrushCF(Color4F brushColorF)
+	{ 
+		pencil1->setBrushCF(brushColorF); 
+		szone->setBrushCF(brushColorF);
+	};
+
+	void setPencilIdx(int idx)
+	{
+		shaderStrIdx = (ShaderPencilIndex)(idx - 1);
+	};
+
+	
 protected:
 	virtual void update(float dt);
 	void initShaderPencils();
@@ -91,12 +103,17 @@ private:
 	void updateRenderTexture();
 	Node* tsn = nullptr;
 	CCRenderTexture * rt = nullptr;
-	ShaderPencilIndex shaderStrIdx = Zone;  //Zone Pencil1
+	CCRenderTexture * rt2 = nullptr;
+	ShaderPencilIndex shaderStrIdx = Pencil1;  //Zone Pencil1
 
 	SPencil1* pencil1 = nullptr;
+	SPencilClr*	pencilClr = nullptr;
 	SZone*	szone = nullptr;
-
+	Sprite* lastrtsp = nullptr;
 	Color4F brushColorF = Color4F::BLUE;
+	int updateidx = 0;
+	Texture2D* newt = nullptr;
+	Image* nimage = nullptr;
 };
 
 #endif

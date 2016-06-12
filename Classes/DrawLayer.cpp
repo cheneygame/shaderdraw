@@ -20,24 +20,34 @@ bool DrawLayer::init()
 	scheduleUpdate();
 #endif
 	//drawMatrix();  //点阵
-	addUI();
+	//addUI();  //选择笔刷
 	return true;
 }
 
+static int Tag_Node = 100;  //drawNode用来画一些点和线 便于观察,ZOrder = 1
 void DrawLayer::initShaderPencils()
 {
 	auto s = Director::getInstance()->getWinSize();
 	
-	pencil1 = SPencil1::SPencil1WithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH6.fsh");
-	szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL9.fsh");
+	//shadertoy_Draw_YH6
+	pencil1 = SPencil1::SPencil1WithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH8.fsh");
+	pencilClr = SPencilClr::SPencilClrWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH9.fsh");
+	//这个初始化时间较长
+	szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL10.fsh"); 
 	pencil1->retain();
 	szone->retain();
+	pencilClr->retain();
+
 	pencil1->setPosition(Vec2(s.width / 4, s.height / 4));
 	pencil1->setContentSize(Size(s.width / 2, s.height / 2));
 	szone->setPosition(Vec2(s.width / 4, s.height / 4));
 	szone->setContentSize(Size(s.width / 2, s.height / 2));
+
+	pencilClr->setPosition(Vec2(s.width / 4, s.height / 4));
+	pencilClr->setContentSize(Size(s.width / 2, s.height / 2));
 }
 
+//这个函数不用，用initShaderPencils()
 void DrawLayer::drawShader()
 {
 	//shadertoy_Line1      抛物线
@@ -56,12 +66,16 @@ void DrawLayer::drawShader()
 	//shadertoy_Draw4,画线段
 	//shadertoy_Draw5 ,纹理方面,画线段
 	//shadertoy_Draw7,线段纹理混合,刮刮乐,多图片背景纹理
+	//shadertoy_Draw9,马赛克
 	//shadertoy_Balloons,气球，含有线段和封闭区域填充
 	//shadertoy_Draw_DL1 ,shadertoy_Draw_DL2,shadertoy_Draw_DL3 shadertoy_Draw_DL4 
 	//shadertoy_Draw_DL5 ，粗细线段
-	//shadertoy_Draw_DL6 ，shadertoy_Draw_DL7,封闭区域
+	//shadertoy_Draw_DL6 ，shadertoy_Draw_DL7,shadertoy_Draw_DL7,封闭区域
 	//shadertoy_Draw_YH2，线段，和自身纹理混合
 	//shadertoy_Draw_YH6，用体贴采样来画线
+	//shadertoy_Draw_DL10 ,封闭区域 + 边缘线段
+	//shadertoy_Draw_YH9 shadertoy_Draw_YH7,clear笔刷
+	//shadertoy_Draw_YH8，shadertoy_Draw_YH6，颜色笔刷
 	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH6.fsh"); //
 
 	auto s = Director::getInstance()->getWinSize();
@@ -94,6 +108,9 @@ void DrawLayer::resetShaderHandler()
 		break;
 	case ShaderPencilIndex::Zone:
 		this->tsn = szone;
+		break;
+	case ShaderPencilIndex::PencilClr:
+		this->tsn = pencilClr;
 		break;
 	default:
 		break;
@@ -204,7 +221,7 @@ void DrawLayer::addUI()
 	menu->setPosition(ccp(80, 500));
 }
 
-static int Tag_Node = 100;
+
 void DrawLayer::drawNode()
 {
 	Color4F color = Color4F(CCRANDOM_0_1(), CCRANDOM_0_1(), CCRANDOM_0_1(), 1);
@@ -276,6 +293,10 @@ void DrawLayer::drawNode()
 				case ShaderPencilIndex::Zone:
 					dynamic_cast<SZone*>(sn)->setzonepos(firstPoses);
 					break;
+				case ShaderPencilIndex::PencilClr:
+					//this->tsn = pencilClr;
+					break;
+
 				default:
 					break;
 				}
@@ -373,6 +394,9 @@ void DrawLayer::sendSnPos(Vec2 pos)
 			break;
 		case ShaderPencilIndex::Zone:
 			dynamic_cast<SZone*>(sn)->setmousexy(pos.x, pos.y);
+			break;
+		case ShaderPencilIndex::PencilClr:
+			dynamic_cast<SPencilClr*>(sn)->setmousexy(pos.x, pos.y);
 			break;
 		default:
 			break;
@@ -897,45 +921,6 @@ void DrawLayer::autoCreateBeizerPos()
 	}
 }
 
-//rendertexture
-void DrawLayer::updateRenderTexture()
-{
-	//return;  //暂时屏蔽
-	if (this->tsn)
-	{
-		auto size = Director::sharedDirector()->getWinSize();
-		if (rt == nullptr)
-		{
-			rt = CCRenderTexture::create(size.width, size.height);
-			rt->retain();
-			this->addChild(rt);
-		}
-		//CCRenderTexture * rt = CCRenderTexture::create(size.width, size.height);
-		rt->setPosition(ccp(size.width / 2, size.height / 2));
-		rt->begin();
-		//传递当前已经渲染的部分,当前纹理
-		switch (shaderStrIdx)
-		{
-		case ShaderPencilIndex::Pencil1:
-			dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
-			break;
-		case ShaderPencilIndex::Zone:
-			dynamic_cast<SZone*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
-			break;
-		default:
-			break;
-		}
-		
-		this->tsn->visit();
-		rt->end();
-		auto s = rt->getSprite();
-		auto scpy = Sprite::createWithTexture(s->getTexture());
-		scpy->setFlipY(true);
-		scpy->setAnchorPoint(ccp(0, 0));
-	}
-	
-}
-
 void DrawLayer::addSpriteList(float x,float y)
 {
 	Sprite* png = Sprite::create("Images/pencel2.png");
@@ -955,6 +940,11 @@ DrawLayer::~DrawLayer()
 	{
 		rt->release();
 	}
+	if (rt2 != nullptr)
+	{
+		rt2->release();
+	}
+	
 	if (tsn != nullptr)
 	{
 		tsn->release();
@@ -981,6 +971,9 @@ void DrawLayer::update(float dt)
 			case ShaderPencilIndex::Zone:
 				dynamic_cast<SZone*>(sn)->setmousexys(sendPosPool);
 				break;
+			case ShaderPencilIndex::PencilClr:
+				dynamic_cast<SPencilClr*>(sn)->setmousexys(sendPosPool);
+				break;
 			default:
 				break;
 			}
@@ -999,6 +992,9 @@ void DrawLayer::update(float dt)
 			case ShaderPencilIndex::Zone:
 				dynamic_cast<SZone*>(sn)->setmousexy(pos.x, pos.y);
 				break;
+			case ShaderPencilIndex::PencilClr:
+				dynamic_cast<SPencilClr*>(sn)->setmousexy(pos.x, pos.y);
+				break;
 			default:
 				break;
 			}
@@ -1010,10 +1006,14 @@ void DrawLayer::update(float dt)
 if (shaderStrIdx == ShaderPencilIndex::Zone)  //zong模式 不能每帧触发
 {
 	return;
-}else if (shaderStrIdx == ShaderPencilIndex::Pencil1)  //zong模式 不能每帧触发
+}else if (shaderStrIdx == ShaderPencilIndex::Pencil1)  //
 {
 	updateRenderTexture();
-}	
+}
+else if (shaderStrIdx == ShaderPencilIndex::PencilClr)  //
+{
+	updateRenderTexture();
+}
 #endif //#ifdef UseRenderTexture
 
 #ifdef UseSpriteList
@@ -1024,3 +1024,157 @@ if (shaderStrIdx == ShaderPencilIndex::Zone)  //zong模式 不能每帧触发
 	}
 }
 
+
+//rendertexture
+void DrawLayer::updateRenderTexture()
+{
+	
+	if (this->tsn)
+	{
+		auto size = Director::sharedDirector()->getWinSize();
+		if (rt == nullptr)
+		{
+			rt = CCRenderTexture::create(size.width, size.height);
+			rt->retain();
+
+
+			//CCSprite* sp = CCSprite::create("Images/background.png");
+			//rt->begin();
+			//sp->visit();
+			//rt->end();
+			//this->addChild(sp);
+
+			this->addChild(rt,0);
+			//GL_ZERO, GL_DST_ALPHA  GL_SRC_ALPHA
+			//GL_ONE, GL_ZERO 有颜色 周边部分是黑的
+			//GL_DST_ALPHA, GL_ZERO 有半透明颜色 周边是黑的
+			//BlendFunc bf = { GL_DST_ALPHA, GL_ZERO };  //GL_ONE, GL_ONE_MINUS_SRC_ALPHA 
+			//rt->getSprite()->setBlendFunc(bf);
+			//rt2 = CCRenderTexture::create(size.width, size.height);
+			//rt2->retain();
+
+		}
+		//CCRenderTexture * rt = CCRenderTexture::create(size.width, size.height);
+		rt->setPosition(ccp(size.width / 2, size.height / 2));
+
+		//传递当前已经渲染的部分,当前纹理
+		switch (shaderStrIdx)
+		{
+		case ShaderPencilIndex::Pencil1:
+		{
+
+		 //rt->getSprite()->getTexture() ,lastrtsp
+			//dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", lastrtsp->getTexture());
+			//sp->getTexture();
+			//测试切换u_texture2
+			//结果的纹理可以实时动态切换
+			 //之前不行是纹理映射不对
+			/*auto spr_background = Sprite::create("cocosui/background.png");
+			auto orange_edit = Sprite::create("Images/CyanSquare.png");
+			auto green_edit = Sprite::create("Images/background.png");
+			updateidx++;
+			if (updateidx % 3 == 0)
+			{
+				dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", green_edit->getTexture());
+			}
+			else if (updateidx % 3 == 1)
+			{
+				dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", green_edit->getTexture());
+			}
+			else
+			{
+				dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", green_edit->getTexture());
+			}*/
+		
+			if (lastrtsp)
+			{
+				//lastrtsp->release();
+			}
+			newt = new Texture2D();
+			nimage = rt->newImage();
+			newt->initWithImage(nimage);
+			lastrtsp = Sprite::createWithTexture(newt);
+			lastrtsp->setAnchorPoint(ccp(0, 0));
+			this->addChild(lastrtsp);
+			lastrtsp->setPosition(ccp(30,30));  //做一点偏移，和rt像素区别开
+
+			if (lastrtsp)
+			{
+				dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", lastrtsp->getTexture());  //lastrtsp->getTexture()
+			}
+			else
+			{
+				//dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
+				log("never have  lastspr");
+			}
+			//if (this->tsn->getParent() == nullptr)
+			//{
+			//	this->addChild(this->tsn);
+			//}
+
+		}
+			break;
+		case ShaderPencilIndex::Zone:
+			dynamic_cast<SZone*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
+			break;
+		case ShaderPencilIndex::PencilClr:
+		{
+			newt = new Texture2D();
+			nimage = rt->newImage();
+			newt->initWithImage(nimage);
+			lastrtsp = Sprite::createWithTexture(newt);
+			lastrtsp->setAnchorPoint(ccp(0, 0));
+
+			dynamic_cast<SPencilClr*>(this->tsn)->setShaderTexture("u_texture2", lastrtsp->getTexture());  //rt->getSprite()->getTexture()
+			//rt->clear(0, 0, 0, 0);
+		}
+			break;
+		default:
+			break;
+		}
+		//思路：每次tsn->visit基于纹理A为背景绘制新的几个或者一个坐标点，之后把整个纹理保存为A纹理进行下一轮鼠标滑动时候渲染使用
+		//其中整个纹理保存为A纹理是难点，目前使用rendertexture的思路，
+		//渲染流程，1:>tsn->visit,2:rt 拍照后显示到屏幕，3：将rt拍的照片的texture赋值给tsn的u_texture2 ， 4：tsn的shader代码进行颜色混合，5返回第一步
+		//现在问题是rt->begin tsn->visit rt->end的效果和rt->getSprite()的效果不同,也不是第四步代码想要的效果
+		//注：tsn并没有被addChild到界面上，是想通过visit() 显示在rt上面
+		//beginWithClear , clear + begin , begin 3种情况效果不同
+		//理论上每次都要 clear + begin ，然后tsn visit,然后获取tsn的纹理显示到屏幕上，再把纹理赋值给tsn的u_texture2,然后循环
+		//现象是：beginWithClear后rt由像素，tsn->visit后rt的getSprite由像素，但效果不同。clear + begin后rt和tsn->visit后rt的getSprite都无像素(???是否跟第一步无像素有关系)。
+		rt->beginWithClear(0, 0, 0, 0);
+
+		//rt->clear(0, 0, 0, 0);
+		//rt->begin();
+
+		//if (lastrtsp)
+			//lastrtsp->visit();
+		this->tsn->visit();
+		//this->removeChildByTag(500);
+		//this->addChild(sp, 10, 500);
+		rt->end();
+
+		//if (lastrtsp) lastrtsp->release();
+		//if (newt) delete newt;
+		//if (nimage) delete nimage;
+		//this->addChild(lastrtsp);
+
+		//rt2->begin();
+		//this->tsn->visit();
+		//rt2->end();
+
+		//if (dynamic_cast<SPencil1*>(this->tsn))
+		//{
+		//	dynamic_cast<SPencil1*>(this->tsn)->clearAllMouseXY();
+		//}
+
+		/*
+		auto s = rt->getSprite();
+		auto scpy = Sprite::createWithTexture(s->getTexture());
+		scpy->setFlipY(true);
+		scpy->setAnchorPoint(ccp(0, 0));
+		*/
+	}
+
+}
+
+//问题：
+//为何rt颜色和addChild sprite之后颜色不同（alpha<1的情况）

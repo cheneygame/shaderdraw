@@ -2,7 +2,8 @@
 //一次传入多个点
 //可以选择颜色的笔刷
 //可以旋转笔刷资源
-
+//rendertexture改进测试
+//透明笔刷，clear类型
 uniform vec2 center;
 uniform vec2 resolution;
 uniform int poslen;
@@ -133,6 +134,7 @@ float inRectAndAbsDis(vec2 origin,vec2 npos)
 
 vec4 getpixelInRect(vec2 origin,vec2 npos)
 {
+	vec2 nCoord = vec2(npos.x,npos.y);
 	npos = (npos.xy/iResolution.xy-0.5)/0.5;
 	vec2 npos_offset = npos - origin;  //偏移
 	mat2 m22 = mat2(cos(RAngle),sin(RAngle),-sin(RAngle),cos(RAngle)); //逆矩阵
@@ -169,17 +171,27 @@ vec4 getpixelInRect(vec2 origin,vec2 npos)
 			//color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色	
 			color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色,透明度来自图片资源 color2.w
 		}
+		if(color2.w == 0) //如果是透明区域
+		{
+			nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+			color2 = texture2D(u_texture2,nCoord);
+		}
+		color2.w = 0;
 		return color2;
 	}else{
 		//非笔刷区域内,
-		vec4 color3 = texture2D(u_texture2,v_texCoord);
-		if(color3.w > 0.0) //有颜色部分
+		//测试发现u_texture2 取出来的像素值都是透明的，取不到非透明区域
+		//npos = (npos.xy/iResolution.xy-0.5)/0.5;
+		//nCoord = vec2(npos.x/iResolution.x*640,);
+		nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+		vec4 color3 = texture2D(u_texture2,nCoord);
+		if(color3.x > 0.0 || color3.y > 0.0 || color3.z > 0.0) //有颜色部分,旧的笔刷
 		{
-			//return vec4(1,0,0,1);
+			//return vec4(0,1,1,0.5);
 			return color3;			
 		}
 		return color3;
-		//return vec4(1,0,0,0);
+		//return vec4(1,1,0,1);
 	}
 	return vec4(1,0,0,0);
 }

@@ -177,7 +177,8 @@ void SZone::onDraw(const Mat4 &transform, uint32_t flags)
 		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
 		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
 	}
-	
+	//brushColorF
+	glProgram->setUniformLocationWith4f((GLint)glProgram->getUniformLocationForName("scolor"), brushColorF.r, brushColorF.g, brushColorF.b, brushColorF.a);
 //#ifdef ZoneCode
 	//zone部分
 	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
@@ -227,10 +228,12 @@ void SZone::pushmousexy(float mx_, float my_)
 
 void SZone::setzonepos(const std::vector<Vec2>& param)
 {
-	zoneposlen = param.size();
+	//zoneposlen = param.size();
+	zoneposlen = (param.size() > zpmaxLen / 2) ? zpmaxLen / 2 : param.size();
+	log("zoneposlen:%d", zoneposlen);
 	if (zoneposlen > 3)
 	{
-		for (int i = 0; i < param.size(); i++)
+		for (int i = 0; i < zoneposlen; i++)
 		{
 			zonepos[i * 2] = param[i].x;
 			zonepos[i * 2 + 1] = param[i].y;

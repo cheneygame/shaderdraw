@@ -2,6 +2,7 @@
 //一次传入多个点
 //可以选择颜色的笔刷
 //可以旋转笔刷资源
+//rendertexture改进测试
 
 uniform vec2 center;
 uniform vec2 resolution;
@@ -133,6 +134,7 @@ float inRectAndAbsDis(vec2 origin,vec2 npos)
 
 vec4 getpixelInRect(vec2 origin,vec2 npos)
 {
+	vec2 nCoord = vec2(npos.x,npos.y);
 	npos = (npos.xy/iResolution.xy-0.5)/0.5;
 	vec2 npos_offset = npos - origin;  //偏移
 	mat2 m22 = mat2(cos(RAngle),sin(RAngle),-sin(RAngle),cos(RAngle)); //逆矩阵
@@ -156,32 +158,36 @@ vec4 getpixelInRect(vec2 origin,vec2 npos)
 		float offsety = (npos.y - minp.y);
 		vec2 coord = vec2(offsetx/w,offsety/h);
 		vec4 color2 = texture2D(u_texture1,coord );
-		if(color2.x + color2.y + color2.z > 2.98)  //白色筛选为透明度，取背景色
+		nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+		if(color2.x + color2.y + color2.z > 2.99)  //白色筛选为透明度，取背景色
 		{
-			color2 = texture2D(u_texture2,v_texCoord);
+			color2 = texture2D(u_texture2,nCoord);
 		}
 		else if(color2.w == 0.0)  //本身就是透明像素
 		{
-			color2 = texture2D(u_texture2,v_texCoord);
+			color2 = texture2D(u_texture2,nCoord);
 		}
 		else{
 			//color2 = vec4(1,0,1,color2.w); //紫色
 			//color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色	
-			color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色,透明度来自图片资源 color2.w
+			color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色,透明度来自图片资源 color2.w scolor.w
 		}
 		return color2;
 	}else{
 		//非笔刷区域内,
-		vec4 color3 = texture2D(u_texture2,v_texCoord);
-		if(color3.w > 0.0) //有颜色部分
+		//测试发现u_texture2 取出来的像素值都是透明的，取不到非透明区域
+		//npos = (npos.xy/iResolution.xy-0.5)/0.5;
+		//nCoord = vec2(npos.x/iResolution.x*640,);
+		nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+		vec4 color3 = texture2D(u_texture2,nCoord);
+		if(color3.x > 0.0 || color3.y > 0.0 || color3.z > 0.0) //有颜色部分,旧的笔刷
 		{
-			//return vec4(1,0,0,1);
 			return color3;			
 		}
-		return color3;
-		//return vec4(1,0,0,0);
+		//return color3;
+		return vec4(0,0,0,0);
 	}
-	return vec4(1,0,0,0);
+	return vec4(0,0,0,0);
 }
 
 #define minw 0.003
@@ -201,7 +207,7 @@ vec4 getPicPixel()
 	if(posnum > 0)
 	{
 		vec4 pixel = vec4(0,0,0,0);
-		for(int i = 0;i < posnum;i++)
+		for(int i = 0;i < posnum;i++)  //允许一次传入多点，因此这里用循环
 		{
 			width = maxw - subwspeed*i;
 			width = max(width,minw);
@@ -216,6 +222,17 @@ vec4 getPicPixel()
 			
 			//pixel = temp;
 		}
+		vec2 nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+		vec4 color3 = texture2D(u_texture2,nCoord);
+		if(pixel.x == 0 && pixel.y == 0 && pixel.z == 0 && pixel.w == 0) //如果不在轨迹内，取背景色
+		{
+			pixel = color3;
+		}
+		if(pixel.w > 0)
+		{
+			pixel.w = 0.01;
+		}
+		
 		return pixel;
 	}
 	return vec4(0,0,0,0);
@@ -230,8 +247,8 @@ void main(void)
 	vec2 speed0 = vec2(0.0432, 0.0123);
     vec2 speed1 = vec2(0.0257, 0.0332);
 	//CC_Texture0 u_texture1
-	vec4 originc = v_fragmentColor*texture2D(CC_Texture0, v_texCoord);
-	vec4 text2color = v_fragmentColor*texture2D(u_texture2, v_texCoord);
+	//vec4 originc = v_fragmentColor*texture2D(CC_Texture0, v_texCoord);
+	//vec4 text2color = v_fragmentColor*texture2D(u_texture2, v_texCoord);
 	gl_FragColor = getPicPixel();//mix(text2color,getPicPixel(),0.5);
 	
 }

@@ -2,7 +2,7 @@
 //一次传入多个点
 //可以选择颜色的笔刷
 //可以旋转笔刷资源
-
+//做成透明笔刷，clear类型
 uniform vec2 center;
 uniform vec2 resolution;
 uniform int poslen;
@@ -149,14 +149,14 @@ vec4 getpixelInRect(vec2 origin,vec2 npos)
 	vec2 minp = vec2(origin.x - hw,origin.y - hh);
 	vec2 maxp = vec2(origin.x + hw,origin.y + hh);
 	float ret = 0.0f;
-	
+	vec4 color3 = texture2D(u_texture2,v_texCoord);
 	if(npos.x >= minp.x && npos.y >= minp.y && npos.x <= maxp.x && npos.y <= maxp.y)
 	{
 		float offsetx = (npos.x - minp.x);
 		float offsety = (npos.y - minp.y);
 		vec2 coord = vec2(offsetx/w,offsety/h);
 		vec4 color2 = texture2D(u_texture1,coord );
-		if(color2.x + color2.y + color2.z > 2.98)  //白色筛选为透明度，取背景色
+		if(color2.x + color2.y + color2.z > 2.98)  //白色筛选为透明度
 		{
 			color2 = texture2D(u_texture2,v_texCoord);
 		}
@@ -167,19 +167,15 @@ vec4 getpixelInRect(vec2 origin,vec2 npos)
 		else{
 			//color2 = vec4(1,0,1,color2.w); //紫色
 			//color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色	
-			color2 = vec4(scolor.x,scolor.y,scolor.z,scolor.w); //来自c++的笔刷颜色,透明度来自图片资源 color2.w
+			//来自c++的笔刷颜色,透明度来自图片资源,
+			color2 = vec4(scolor.x,scolor.y,scolor.z,0); 
+			//clr模式设置为0
+			//color2 = vec4(0,0,0,0); 
 		}
 		return color2;
 	}else{
-		//非笔刷区域内,
-		vec4 color3 = texture2D(u_texture2,v_texCoord);
-		if(color3.w > 0.0) //有颜色部分
-		{
-			//return vec4(1,0,0,1);
-			return color3;			
-		}
+		//return vec4(1,1,0,1);
 		return color3;
-		//return vec4(1,0,0,0);
 	}
 	return vec4(1,0,0,0);
 }
@@ -216,6 +212,7 @@ vec4 getPicPixel()
 			
 			//pixel = temp;
 		}
+		
 		return pixel;
 	}
 	return vec4(0,0,0,0);
@@ -230,8 +227,7 @@ void main(void)
 	vec2 speed0 = vec2(0.0432, 0.0123);
     vec2 speed1 = vec2(0.0257, 0.0332);
 	//CC_Texture0 u_texture1
-	vec4 originc = v_fragmentColor*texture2D(CC_Texture0, v_texCoord);
-	vec4 text2color = v_fragmentColor*texture2D(u_texture2, v_texCoord);
-	gl_FragColor = getPicPixel();//mix(text2color,getPicPixel(),0.5);
+	//vec4 originc = v_fragmentColor*texture2D(CC_Texture0, v_texCoord);
+	gl_FragColor = getPicPixel();
 	
 }

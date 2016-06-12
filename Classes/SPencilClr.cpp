@@ -1,8 +1,8 @@
-#include"SPencil1.h"
+#include"SPencilClr.h"
 
 ///---------------------------------------
 // 
-// SPencil1
+// SPencilClr
 // 
 ///---------------------------------------
 enum
@@ -11,7 +11,7 @@ enum
 	SIZE_Y = 256,
 };
 
-SPencil1::SPencil1()
+SPencilClr::SPencilClr()
 :_center(Vec2(0.0f, 0.0f))
 , _resolution(Vec2(0.0f, 0.0f))
 , _time(0.0f)
@@ -20,20 +20,20 @@ SPencil1::SPencil1()
 
 }
 
-SPencil1::~SPencil1()
+SPencilClr::~SPencilClr()
 {
 }
 
-SPencil1* SPencil1::SPencil1WithVertex(const std::string &vert, const std::string& frag)
+SPencilClr* SPencilClr::SPencilClrWithVertex(const std::string &vert, const std::string& frag)
 {
-	auto node = new (std::nothrow) SPencil1();
+	auto node = new (std::nothrow) SPencilClr();
 	node->initWithVertex(vert, frag);
 	node->autorelease();
 
 	return node;
 }
 
-bool SPencil1::initWithVertex(const std::string &vert, const std::string &frag)
+bool SPencilClr::initWithVertex(const std::string &vert, const std::string &frag)
 {
 #if CC_ENABLE_CACHE_TEXTURE_DATA
 	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
@@ -78,7 +78,7 @@ bool SPencil1::initWithVertex(const std::string &vert, const std::string &frag)
 	return true;
 }
 
-void SPencil1::loadShaderVertex(const std::string &vert, const std::string &frag)
+void SPencilClr::loadShaderVertex(const std::string &vert, const std::string &frag)
 {
 	auto fileUtiles = FileUtils::getInstance();
 
@@ -101,12 +101,12 @@ void SPencil1::loadShaderVertex(const std::string &vert, const std::string &frag
 	setGLProgramState(glprogramstate);
 }
 
-void SPencil1::update(float dt)
+void SPencilClr::update(float dt)
 {
 	_time += dt;
 }
 
-void SPencil1::setPosition(const Vec2 &newPosition)
+void SPencilClr::setPosition(const Vec2 &newPosition)
 {
 	Node::setPosition(newPosition);
 	auto position = getPosition();
@@ -114,14 +114,14 @@ void SPencil1::setPosition(const Vec2 &newPosition)
 	getGLProgramState()->setUniformVec2("center", _center);
 }
 
-void SPencil1::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
+void SPencilClr::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
 {
 	_customCommand.init(_globalZOrder, transform, flags);
-	_customCommand.func = CC_CALLBACK_0(SPencil1::onDraw, this, transform, flags);
+	_customCommand.func = CC_CALLBACK_0(SPencilClr::onDraw, this, transform, flags);
 	renderer->addCommand(&_customCommand);
 }
 
-void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
+void SPencilClr::onDraw(const Mat4 &transform, uint32_t flags)
 {
 	auto size = Director::sharedDirector()->getWinSize();
 		//float w = size, h = SIZE_Y;  //可视窗口，view的大小
@@ -172,19 +172,7 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
 	}
 	//color
-	//brushColorF,测试用
-	//if (brushColorF.equals(Color4F::BLUE))
-	//{
-	//	brushColorF = Color4F::RED;
-	//}
-	//else if (brushColorF.equals(Color4F::RED))
-	//{
-	//	brushColorF = Color4F::YELLOW;
-	//}
-	//else if (brushColorF.equals(Color4F::YELLOW))
-	//{
-	//	brushColorF = Color4F::BLUE;
-	//}
+	//brushColorF
 	glProgram->setUniformLocationWith4f((GLint)glProgram->getUniformLocationForName("scolor"), brushColorF.r, brushColorF.g, brushColorF.b, brushColorF.a);
 //#ifdef ZoneCode
 	//zone部分
@@ -216,7 +204,7 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 	
 }
 
-void SPencil1::pushmousexy(float mx_, float my_)
+void SPencilClr::pushmousexy(float mx_, float my_)
 {
 	auto size = Director::sharedDirector()->getWinSize();
 	float hw = size.width / 2;
@@ -233,7 +221,7 @@ void SPencil1::pushmousexy(float mx_, float my_)
 	
 }
 
-void SPencil1::setzonepos(const std::vector<Vec2>& param)
+void SPencilClr::setzonepos(const std::vector<Vec2>& param)
 {
 	zoneposlen = param.size();
 	if (zoneposlen > 3)
@@ -254,18 +242,18 @@ void SPencil1::setzonepos(const std::vector<Vec2>& param)
 	
 }
 
-void SPencil1::setShaderTexture(const std::string& name, Texture2D* texture)
+void SPencilClr::setShaderTexture(const std::string& name, Texture2D* texture)
 {
 	//auto glProgram = getGLProgramState()->getGLProgram();
 	getGLProgramState()->setUniformTexture(name, texture);
 }
 
-void SPencil1::clearAllMouseXY()
+void SPencilClr::clearAllMouseXY()
 {
 	pushidx = 0;
 }
 
-void SPencil1::setmousexys(std::deque<Vec2>& pool)
+void SPencilClr::setmousexys(std::deque<Vec2>& pool)
 {
 	while (pool.size() > 0)
 	{

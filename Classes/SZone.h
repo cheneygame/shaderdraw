@@ -23,6 +23,8 @@ public:
 	void pushmousexy(float mx_, float my_);
 	void clearAllMouseXY();
 	void setShaderTexture(const std::string& name, Texture2D* texture);
+
+	void setBrushCF(Color4F color){ brushColorF = color; };
 protected:
 	SZone();
 	~SZone();
@@ -46,5 +48,7 @@ protected:
 	static const int zpmaxLen = 1024 * 1;
 	GLfloat zonepos[zpmaxLen];  //zonepos是实际坐标，0-width之间
 	int zoneposlen = 0;
+
+	Color4F brushColorF = Color4F::BLUE;// Color4F::MAGENTA;
 };
 #endif

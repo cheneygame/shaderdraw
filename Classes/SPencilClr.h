@@ -1,6 +1,6 @@
 
-#ifndef _SPencil1_H_
-#define _SPencil1_H_
+#ifndef _SPencilClr_H_
+#define _SPencilClr_H_
 #include "ui/CocosGUI.h"
 
 #include "cocos2d.h"
@@ -8,11 +8,11 @@
 USING_NS_CC;
 //USING_NS_CC_EXT;
 #define OnlySendOneTime  //只发送一次就清除
-class SPencil1 : public Sprite//public Node
+class SPencilClr : public Node
 {
 public:
-	CREATE_FUNC(SPencil1);
-	static SPencil1* SPencil1WithVertex(const std::string &vert, const std::string &frag);
+	CREATE_FUNC(SPencilClr);
+	static SPencilClr* SPencilClrWithVertex(const std::string &vert, const std::string &frag);
 
 	virtual void update(float dt);
 	virtual void setPosition(const Vec2 &newPosition);
@@ -25,8 +25,8 @@ public:
 	void setShaderTexture(const std::string& name, Texture2D* texture);
 	void setBrushCF(Color4F color){ brushColorF = color; };
 protected:
-	SPencil1();
-	~SPencil1();
+	SPencilClr();
+	~SPencilClr();
 
 	bool initWithVertex(const std::string &vert, const std::string &frag);
 	void loadShaderVertex(const std::string &vert, const std::string &frag);

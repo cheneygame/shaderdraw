@@ -22,8 +22,10 @@ public:
 
 protected:
 	//virtual void update(float dt);
+	void addPencilScroll();
 	void addColorScroll();
 	void dnw_cb(Ref* ref, Widget::TouchEventType type);
+	void dnw_idx(Ref* ref, Widget::TouchEventType type);
 private:
 	DrawLayer* drawLayer = nullptr;
 };
