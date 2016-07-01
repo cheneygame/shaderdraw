@@ -90,7 +90,7 @@ void DrawLayer::drawShader()
 	this->tsn = sn;
 	sn->retain();
 	////zone测试
-	//addChild(sn, 1, "sn");
+	//addChild(sn, 1, "sn");  //sn不显示，用rendertexture显示
 	//this->tsn = sn;
 #else
 	addChild(sn, 1, "sn");
@@ -1044,7 +1044,8 @@ void DrawLayer::updateRenderTexture()
 			//rt->end();
 			//this->addChild(sp);
 
-			this->addChild(rt,0);
+			this->addChild(rt, 0, Tag_RenderTexture);
+			rt->setVisible(false);
 			//GL_ZERO, GL_DST_ALPHA  GL_SRC_ALPHA
 			//GL_ONE, GL_ZERO 有颜色 周边部分是黑的
 			//GL_DST_ALPHA, GL_ZERO 有半透明颜色 周边是黑的
@@ -1090,13 +1091,22 @@ void DrawLayer::updateRenderTexture()
 			{
 				//lastrtsp->release();
 			}
-			newt = new Texture2D();
+			
+			
+
 			nimage = rt->newImage();
+			newt = new Texture2D();
 			newt->initWithImage(nimage);
 			lastrtsp = Sprite::createWithTexture(newt);
 			lastrtsp->setAnchorPoint(ccp(0, 0));
-			this->addChild(lastrtsp);
-			lastrtsp->setPosition(ccp(30,30));  //做一点偏移，和rt像素区别开
+			this->removeChildByTag(Tag_RenderTextureSprite);  //删除上一个，每次只显示一个 rt 的sprite
+			this->addChild(lastrtsp, 0, Tag_RenderTextureSprite);
+			lastrtsp->setPosition(ccp(0,0));  //做一点偏移，和rt像素区别开
+
+			/*lastrtsp = Sprite::createWithSpriteFrame(rt->getSprite()->displayFrame());
+			lastrtsp->setAnchorPoint(ccp(0, 0));
+			this->removeChildByTag(Tag_RenderTextureSprite);
+			this->addChild(lastrtsp, 0, Tag_RenderTextureSprite);*/
 
 			if (lastrtsp)
 			{
@@ -1104,7 +1114,7 @@ void DrawLayer::updateRenderTexture()
 			}
 			else
 			{
-				//dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
+				dynamic_cast<SPencil1*>(this->tsn)->setShaderTexture("u_texture2", rt->getSprite()->getTexture());
 				log("never have  lastspr");
 			}
 			//if (this->tsn->getParent() == nullptr)
@@ -1132,16 +1142,30 @@ void DrawLayer::updateRenderTexture()
 		default:
 			break;
 		}
-		//思路：每次tsn->visit基于纹理A为背景绘制新的几个或者一个坐标点，之后把整个纹理保存为A纹理进行下一轮鼠标滑动时候渲染使用
+		//blendfunc 1
+		ccBlendFunc originalBlend = ((Sprite*)(this->tsn))->getBlendFunc();
+		ccBlendFunc func = { GL_ZERO, GL_ONE }; //GL_SRC_ALPHA, GL_ONE
+		((Sprite*)(this->tsn))->setBlendFunc(func);
+
+		//思路：
+		//1，用一个sprite计算上次纹理和这次坐标的颜色混合，用一个texturerender显示画面和保存当前的纹理给sprite作为下次渲染用
+		//2,sprite并不显示到界面，每次visit被动触发，texturerender 有显示到界面
+		//3,由于texturerender显示带透明的的有问题，因此让texturerender visible = false,每次基于texturerender生成一个sprite用来显示到界面
+		//流程：每次tsn->visit基于纹理A为背景绘制新的几个或者一个坐标点，之后把整个纹理保存为A纹理进行下一轮鼠标滑动时候渲染使用
 		//其中整个纹理保存为A纹理是难点，目前使用rendertexture的思路，
 		//渲染流程，1:>tsn->visit,2:rt 拍照后显示到屏幕，3：将rt拍的照片的texture赋值给tsn的u_texture2 ， 4：tsn的shader代码进行颜色混合，5返回第一步
 		//现在问题是rt->begin tsn->visit rt->end的效果和rt->getSprite()的效果不同,也不是第四步代码想要的效果
 		//注：tsn并没有被addChild到界面上，是想通过visit() 显示在rt上面
 		//beginWithClear , clear + begin , begin 3种情况效果不同
 		//理论上每次都要 clear + begin ，然后tsn visit,然后获取tsn的纹理显示到屏幕上，再把纹理赋值给tsn的u_texture2,然后循环
-		//现象是：beginWithClear后rt由像素，tsn->visit后rt的getSprite由像素，但效果不同。clear + begin后rt和tsn->visit后rt的getSprite都无像素(???是否跟第一步无像素有关系)。
-		rt->beginWithClear(0, 0, 0, 0);
+		//现象是：
+		//1,beginWithClear后rt有像素，tsn->visit后rt的getSprite有像素，但效果不同。
+		//2,clear + begin后rt和tsn->visit后rt的getSprite都无像素(???是否跟第一步无像素有关系)。
+		//问题：
+		//1，一下多个点的时候重叠区域会变成白色
+		//,clear+begin模式还不行
 
+		rt->beginWithClear(0, 0, 0, 0);
 		//rt->clear(0, 0, 0, 0);
 		//rt->begin();
 
@@ -1151,6 +1175,19 @@ void DrawLayer::updateRenderTexture()
 		//this->removeChildByTag(500);
 		//this->addChild(sp, 10, 500);
 		rt->end();
+
+		if (nimage)
+		{
+			nimage->release();
+		}
+		if (newt)
+		{
+			newt->release();
+		}
+
+		//blendfunc 2
+		//((Sprite*)(this->tsn))->setBlendFunc(originalBlend);
+
 
 		//if (lastrtsp) lastrtsp->release();
 		//if (newt) delete newt;

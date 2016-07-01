@@ -35,6 +35,10 @@ class DrawLayer:public Layer
 		Zone,
 		PencilClr,
 	};
+	enum LayerTag{
+		Tag_RenderTexture = 600,
+		Tag_RenderTextureSprite,
+	};
 public:
 	CREATE_FUNC(DrawLayer);
 	virtual bool init();

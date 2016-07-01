@@ -222,15 +222,15 @@ vec4 getPicPixel()
 			
 			//pixel = temp;
 		}
-		vec2 nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转
+		vec2 nCoord = vec2(gl_FragCoord.x/iResolution.x,1- gl_FragCoord.y/iResolution.y);  //需要翻转Y
 		vec4 color3 = texture2D(u_texture2,nCoord);
 		if(pixel.x == 0 && pixel.y == 0 && pixel.z == 0 && pixel.w == 0) //如果不在轨迹内，取背景色
 		{
 			pixel = color3;
 		}
-		if(pixel.w > 0)
+		if(pixel.w > 0) //透明度
 		{
-			pixel.w = 0.01;
+			pixel.w = 0.1;
 		}
 		
 		return pixel;
