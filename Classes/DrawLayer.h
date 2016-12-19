@@ -39,6 +39,14 @@ class DrawLayer:public Layer
 		Tag_RenderTexture = 600,
 		Tag_RenderTextureSprite,
 	};
+
+	enum PencilAction
+	{
+		PencilAction_None = 0,
+		PencilAction_Began,
+		PencilAction_Move,
+		PencilAction_End,
+	};
 public:
 	CREATE_FUNC(DrawLayer);
 	virtual bool init();
@@ -101,6 +109,9 @@ private:
 	bool SegmentIntersect(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4);
 	void drawFirstPosesLines();
 	void checkPosInZone(Vec2 pos);
+	void pencil1DrawEnd();
+	void checkDrawPencil1Finish();
+	void drawPencil1Finish();
 	//beizer²¿·Ö
 	void startBeizer();
 	void autoCreateBeizerPos();
@@ -118,6 +129,9 @@ private:
 	int updateidx = 0;
 	Texture2D* newt = nullptr;
 	Image* nimage = nullptr;
+	int pencil1_spriteNum = 0;
+	
+	PencilAction pencilAction = PencilAction_None;
 };
 
 #endif

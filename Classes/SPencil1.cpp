@@ -35,19 +35,22 @@ SPencil1* SPencil1::SPencil1WithVertex(const std::string &vert, const std::strin
 
 bool SPencil1::initWithVertex(const std::string &vert, const std::string &frag)
 {
-#if CC_ENABLE_CACHE_TEXTURE_DATA
-	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
-		this->setGLProgramState(nullptr);
-		loadShaderVertex(_vertFileName, _fragFileName);
-	});
-
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-#endif
-
+	log("initWithVertex:%s",vert.c_str());
+//#if CC_ENABLE_CACHE_TEXTURE_DATA
+//	log("CC_ENABLE_CACHE_TEXTURE_DATA");
+//	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
+//		this->setGLProgramState(nullptr);
+//		loadShaderVertex(_vertFileName, _fragFileName);
+//	});
+//
+//	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+//#endif
+	log("initWithVertex1");
 	_vertFileName = vert;
 	_fragFileName = frag;
 
 	loadShaderVertex(vert, frag);
+	log("initWithVertex2");
 	auto size = Director::sharedDirector()->getWinSize();
 	//float w = size, h = SIZE_Y;  //可视窗口，view的大小
 	float w = size.width;
@@ -74,7 +77,7 @@ bool SPencil1::initWithVertex(const std::string &vert, const std::string &frag)
 
 	setContentSize(Size(SIZE_X, SIZE_Y));
 	setAnchorPoint(Vec2(0.5f, 0.5f));
-	
+	log("initWithVertex3");
 	return true;
 }
 
@@ -95,10 +98,13 @@ void SPencil1::loadShaderVertex(const std::string &vert, const std::string &frag
 		std::string vertexFilePath = fileUtiles->fullPathForFilename(vert);
 		vertSource = fileUtiles->getStringFromFile(vertexFilePath);
 	}
-
+	//log("glprogram:%s,%s", vertSource.c_str(), fragSource.c_str());
 	auto glprogram = GLProgram::createWithByteArrays(vertSource.c_str(), fragSource.c_str());
+	log("glprogram1");  
 	auto glprogramstate = GLProgramState::getOrCreateWithGLProgram(glprogram);
+	log("glprogram2");//o9dfdsf
 	setGLProgramState(glprogramstate);
+	log("glprogram3");//o9dfdsf
 }
 
 void SPencil1::update(float dt)
@@ -123,10 +129,12 @@ void SPencil1::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
 
 void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 {
+	log("SPencil1::onDraw");
 	auto size = Director::sharedDirector()->getWinSize();
 		//float w = size, h = SIZE_Y;  //可视窗口，view的大小
 	float w = size.width;
 	float h = size.height;
+	//每2个float表示一个点pos，3组pos表示一个三角形，一共2个三角形
 	GLfloat vertices[12] = { 0, 0, w, 0, w, h, 0, 0, 0, h, w, h }; //影响：shader窗口大小（shader画的内容占cocos视窗的大小比例，看到内容本身不变化）
 
 	auto glProgramState = getGLProgramState();
@@ -134,7 +142,7 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 	glProgramState->setUniformVec2("mouse",Vec2(mx,my));
 	float hw = size.width/2;
 	float hh = size.height/2;
-	
+	log("w,h:%f,%f",w,h);
 	//60,130 190,130
 	glProgramState->apply(transform);
 
@@ -171,6 +179,7 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 		glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("poslen"), len);
 		glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("pos"), pos, len);  // float 数组
 	}
+	log("SPencil1::onDraw poslen:%d", len);
 	//color
 	//brushColorF,测试用
 	//if (brushColorF.equals(Color4F::BLUE))
@@ -185,11 +194,13 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 	//{
 	//	brushColorF = Color4F::BLUE;
 	//}
-	glProgram->setUniformLocationWith4f((GLint)glProgram->getUniformLocationForName("scolor"), brushColorF.r, brushColorF.g, brushColorF.b, brushColorF.a);
+	glProgram->setUniformLocationWith4f((GLint)glProgram->getUniformLocationForName("scolor"), brushColorF.r, brushColorF.g, brushColorF.b, brushColorF.a); //test 0.5
+	log("SPencil1::onDraw scolor");
 //#ifdef ZoneCode
 	//zone部分
-	glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
-	glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("zonepos"), zonepos, zoneposlen * 2);  // float 数组
+	//glProgram->setUniformLocationWith1i((GLint)glProgram->getUniformLocationForName("zoneposlen"), zoneposlen);
+	//glProgram->setUniformLocationWith1fv((GLint)glProgram->getUniformLocationForName("zonepos"), zonepos, zoneposlen * 2);  // float 数组
+	log("SPencil1::onDraw zoneposlen:%d", zoneposlen);
 //#endif
 	/*
 	std::string str = "{";
@@ -206,14 +217,16 @@ void SPencil1::onDraw(const Mat4 &transform, uint32_t flags)
 	//log("uniform float pos[] = %s",str.c_str());
 	*/
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-
+	log("SPencil1::onDraw GL_TRIANGLES");
 	CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES(1, 6);
-
+	CHECK_GL_ERROR_DEBUG();
+	log("SPencil1::CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES");
+	//glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 #ifdef OnlySendOneTime
 	//渲染完成一次，清除点
 	this->clearAllMouseXY();
 #endif
-	
+	log("SPencil1::onDraw end all");
 }
 
 void SPencil1::pushmousexy(float mx_, float my_)
@@ -228,7 +241,7 @@ void SPencil1::pushmousexy(float mx_, float my_)
 	//log("pushidx y:,%d,%f,%f,%f,%f", pushidx, x, y, mx_, my_);
 	pos[pushidx++] = y;
 	//x,y范围是[-1,1]
-	log("pushidx,x,y:,%d,%f,%f", pushidx, x, y);
+	//log("pushidx,x,y:,%d,%f,%f", pushidx, x, y);
 	//log("pushmousexy shader pos len:%d", pushidx);
 	
 }

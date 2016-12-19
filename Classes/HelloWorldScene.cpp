@@ -1,6 +1,10 @@
 #include "HelloWorldScene.h"
-#include"MainLayer.h"
+#include "MainLayer.h"
 USING_NS_CC;
+
+//#if(CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+//#define mLog(...) __android_log_print(ANDROID_LOG_DEBUG,"cocos2d-x", __VA_ARGS__)
+//#endif
 
 Scene* HelloWorld::createScene()
 {

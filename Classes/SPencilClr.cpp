@@ -196,7 +196,7 @@ void SPencilClr::onDraw(const Mat4 &transform, uint32_t flags)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES(1, 6);
-
+	CHECK_GL_ERROR_DEBUG();
 #ifdef OnlySendOneTime
 	//渲染完成一次，清除点
 	this->clearAllMouseXY();

@@ -24,6 +24,7 @@ void AppDelegate::initGLContextAttrs()
 
 bool AppDelegate::applicationDidFinishLaunching() {
     // initialize director
+	log("applicationDidFinishLaunching");
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
     if(!glview) {
@@ -42,7 +43,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // run
     director->runWithScene(scene);
-
+	log("applicationDidFinishLaunching1");
     return true;
 }
 

@@ -35,14 +35,14 @@ ShaderNode* ShaderNode::shaderNodeWithVertex(const std::string &vert, const std:
 
 bool ShaderNode::initWithVertex(const std::string &vert, const std::string &frag)
 {
-#if CC_ENABLE_CACHE_TEXTURE_DATA
-	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
-		this->setGLProgramState(nullptr);
-		loadShaderVertex(_vertFileName, _fragFileName);
-	});
-
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-#endif
+//#if CC_ENABLE_CACHE_TEXTURE_DATA
+//	auto listener = EventListenerCustom::create(EVENT_RENDERER_RECREATED, [this](EventCustom* event){
+//		this->setGLProgramState(nullptr);
+//		loadShaderVertex(_vertFileName, _fragFileName);
+//	});
+//
+//	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+//#endif
 
 	_vertFileName = vert;
 	_fragFileName = frag;
@@ -176,7 +176,7 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	float w = size.width;
 	float h = size.height;
 	GLfloat vertices[12] = { 0, 0, w, 0, w, h, 0, 0, 0, h, w, h }; //影响：shader窗口大小（shader画的内容占cocos视窗的大小比例，看到内容本身不变化）
-
+	
 	auto glProgramState = getGLProgramState();
 	glProgramState->setVertexAttribPointer("a_position", 2, GL_FLOAT, GL_FALSE, 0, vertices);
 	glProgramState->setUniformVec2("mouse",Vec2(mx,my));
@@ -242,7 +242,7 @@ void ShaderNode::onDraw(const Mat4 &transform, uint32_t flags)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	CC_INCREMENT_GL_DRAWN_BATCHES_AND_VERTICES(1, 6);
-
+	CHECK_GL_ERROR_DEBUG();
 #ifdef OnlySendOneTime
 	//渲染完成一次，清除点
 	this->clearAllMouseXY();
@@ -262,7 +262,7 @@ void ShaderNode::pushmousexy(float mx_, float my_)
 	//log("pushidx y:,%d,%f,%f,%f,%f", pushidx, x, y, mx_, my_);
 	pos[pushidx++] = y;
 	//x,y范围是[-1,1]
-	log("pushidx,x,y:,%d,%f,%f", pushidx, x, y);
+	//log("pushidx,x,y:,%d,%f,%f", pushidx, x, y);
 	//log("pushmousexy shader pos len:%d", pushidx);
 	
 }

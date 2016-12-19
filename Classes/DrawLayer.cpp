@@ -5,49 +5,62 @@
 bool DrawLayer::init()
 {
 	CCLayer::init();
-	initShaderPencils();
-	//bg
-	LayerColor* lc = LayerColor::create(Color4B(100,100,100,150),960,640);
-	addChild(lc);
-	drawNode();  //自带画点
-#ifndef BeiZerTest
-#ifdef ShowShaderLayer
-	//drawShader();  //调用shader
-#endif
-#endif
+	if (false){
+		//测试单独shader代码
+		drawShader();
+	}
+	else
+	{
+		initShaderPencils();
+		//bg
+		LayerColor* lc = LayerColor::create(Color4B(100,100,100,150),960,640);
+		addChild(lc);
+		drawNode();  //自带画点
+		#ifndef BeiZerTest
+		#ifdef ShowShaderLayer
+				drawShader();  //调用shader
+		#endif
+		#endif
 
-#ifdef UseSendPosPool
-	scheduleUpdate();
-#endif
-	//drawMatrix();  //点阵
-	//addUI();  //选择笔刷
+		#ifdef UseSendPosPool
+				scheduleUpdate();
+		#endif
+				//drawMatrix();  //点阵
+				//addUI();  //选择笔刷
+	}
+	
 	return true;
 }
 
 static int Tag_Node = 100;  //drawNode用来画一些点和线 便于观察,ZOrder = 1
 void DrawLayer::initShaderPencils()
 {
+	log("initShaderPencils");
 	auto s = Director::getInstance()->getWinSize();
 	
 	//shadertoy_Draw_YH6
-	pencil1 = SPencil1::SPencil1WithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH8.fsh");
-	pencilClr = SPencilClr::SPencilClrWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH9.fsh");
-	//这个初始化时间较长
-	szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL10.fsh"); 
+	pencil1 = SPencil1::SPencil1WithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_SS3.fsh"); //shadertoy_Draw_YH8 shadertoy_Draw_SS2
+	log("pencil1");
 	pencil1->retain();
-	szone->retain();
-	pencilClr->retain();
-
 	pencil1->setPosition(Vec2(s.width / 4, s.height / 4));
 	pencil1->setContentSize(Size(s.width / 2, s.height / 2));
+
+	//这个初始化时间较长
+	/*szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL10.fsh");
+	log("szone");
+	szone->retain();
 	szone->setPosition(Vec2(s.width / 4, s.height / 4));
 	szone->setContentSize(Size(s.width / 2, s.height / 2));
 
+	pencilClr = SPencilClr::SPencilClrWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH9.fsh");
+	log("pencilClr");
+	pencilClr->retain();
 	pencilClr->setPosition(Vec2(s.width / 4, s.height / 4));
-	pencilClr->setContentSize(Size(s.width / 2, s.height / 2));
+	pencilClr->setContentSize(Size(s.width / 2, s.height / 2));*/
 }
 
 //这个函数不用，用initShaderPencils()
+//这个函数变成演示shader用
 void DrawLayer::drawShader()
 {
 	//shadertoy_Line1      抛物线
@@ -76,7 +89,7 @@ void DrawLayer::drawShader()
 	//shadertoy_Draw_DL10 ,封闭区域 + 边缘线段
 	//shadertoy_Draw_YH9 shadertoy_Draw_YH7,clear笔刷
 	//shadertoy_Draw_YH8，shadertoy_Draw_YH6，颜色笔刷
-	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_YH6.fsh"); //
+	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_mario.fsh"); //shadertoy_Draw_YH6 shadertoy_mario shadertoy_sea
 
 	auto s = Director::getInstance()->getWinSize();
 	sn->setPosition(Vec2(s.width / 4, s.height / 4));
@@ -86,16 +99,16 @@ void DrawLayer::drawShader()
 	auto moveto1 = MoveTo::create(1.0f, Vec2(s.width / 2, s.height / 2));
 	auto sequece = Sequence::createWithTwoActions(moveto, moveto1);
 	//sn->runAction(RepeatForever::create(sequece));
-#ifdef UseRenderTexture
-	this->tsn = sn;
-	sn->retain();
-	////zone测试
-	//addChild(sn, 1, "sn");  //sn不显示，用rendertexture显示
-	//this->tsn = sn;
-#else
 	addChild(sn, 1, "sn");
 	this->tsn = sn;
-#endif
+
+//#ifdef UseRenderTexture
+//	this->tsn = sn;
+//	sn->retain();
+//#else
+//	addChild(sn, 1, "sn");
+//	this->tsn = sn;
+//#endif
 	
 }
 
@@ -128,7 +141,7 @@ void DrawLayer::addShaderNode()
 	addChild(this->tsn, 1, "sn");
 #endif
 	return;
-
+	/*
 	//shadertoy_Line1      抛物线
 	//shadertoy_Glow
 	//shadertoy_curvefitting  波浪
@@ -170,6 +183,7 @@ void DrawLayer::addShaderNode()
 	addChild(sn, 1, "sn");
 	this->tsn = sn;
 #endif
+	*/
 }
 
 void DrawLayer::removeShaderNode()
@@ -245,6 +259,7 @@ void DrawLayer::drawNode()
 	int index = 0;
 	el->onTouchBegan = [=](Touch* touch, Event* event)
 	{
+		pencilAction = PencilAction::PencilAction_Began;
 		addShaderNode(); 
 
 		auto pos1 = touch->getLocation();
@@ -254,16 +269,21 @@ void DrawLayer::drawNode()
 		lastidx = Vec2(0, 0);
 		lastMousePos = Vec2(0, 0);
 		lastMousePosWhenDraw = Vec2(0, 0);
-		if (linePos.size() >= 4)
+		if (linePos.size() >= 4)  //用来测试2条相交的线
 		{
 			linePos.clear();
 		}
 		linePos.push_back(pos1);
+		//TouchBegan就开始画
+		drawPoint(pos1);
+		lastMousePos = pos1;
+
 		return true;
 	};
 
 	el->onTouchEnded = [=](Touch* touch, Event* event)
 	{
+		pencilAction = PencilAction::PencilAction_End;
 		auto pos1 = touch->getLocation();
 		log("ended1:%f,%f", pos1.x, pos1.y);
 #ifdef BeiZerTest
@@ -277,38 +297,42 @@ void DrawLayer::drawNode()
 
 		switch (shaderStrIdx)
 		{
-		case ShaderPencilIndex::Zone:
-		{
-			this->autoCreateBeizerPos(); //创建弧线
-			//this->drawFirstPosesLines();  //把所有点用直线连接 起来,画出整个区域轮廓
-			//auto sn = this->getChildByName("sn");
-			auto sn = this->tsn;
-			if (sn)
+			case ShaderPencilIndex::Zone:
 			{
-				switch (shaderStrIdx)
+				this->autoCreateBeizerPos(); //创建弧线
+				//this->drawFirstPosesLines();  //把所有点用直线连接 起来,画出整个区域轮廓
+				//auto sn = this->getChildByName("sn");
+				auto sn = this->tsn;
+				if (sn)
 				{
-				case ShaderPencilIndex::Pencil1:
-					dynamic_cast<SPencil1*>(sn)->setzonepos(firstPoses);
-					break;
-				case ShaderPencilIndex::Zone:
-					dynamic_cast<SZone*>(sn)->setzonepos(firstPoses);
-					break;
-				case ShaderPencilIndex::PencilClr:
-					//this->tsn = pencilClr;
-					break;
+					switch (shaderStrIdx)
+					{
+					case ShaderPencilIndex::Pencil1:
+						dynamic_cast<SPencil1*>(sn)->setzonepos(firstPoses);
+						break;
+					case ShaderPencilIndex::Zone:
+						dynamic_cast<SZone*>(sn)->setzonepos(firstPoses);
+						break;
+					case ShaderPencilIndex::PencilClr:
+						//this->tsn = pencilClr;
+						break;
 
-				default:
-					break;
+					default:
+						break;
+					}
+
 				}
-
+				firstPoses.clear();
+				//zone模式是 mouseEnd结束后绘制一次，pencil模式是放在update
+				updateRenderTexture();
 			}
-			firstPoses.clear();
-			//zone模式是 mouseEnd结束后绘制一次，pencil模式是放在update
-			updateRenderTexture();
-		}
-			break;
-		default:
-			break;
+				break;
+			case ShaderPencilIndex::Pencil1:
+			{
+				pencil1DrawEnd();
+			}break;
+			default:
+				break;
 		}
 /*
 #ifdef ZoneCode
@@ -363,6 +387,7 @@ void DrawLayer::drawNode()
 
 	el->onTouchMoved = [=](Touch* touch, Event* event)
 	{
+		pencilAction = PencilAction::PencilAction_Move;
 		auto pos1 = touch->getLocation();
 		log("moved1:%f,%f", pos1.x, pos1.y);
 #ifdef drawCCSMousePath
@@ -381,6 +406,8 @@ void DrawLayer::drawNode()
 
 }
 
+//发送给shader的pos,
+//如果开启缓存模式，pos会被放入sendPosPool，然后每次update取一个发送到shader
 void DrawLayer::sendSnPos(Vec2 pos)
 {
 #ifndef UseSendPosPool
@@ -953,7 +980,7 @@ DrawLayer::~DrawLayer()
 
 void DrawLayer::update(float dt)
 {
-	
+	int sendPosPool_size_FirstLog = sendPosPool.size();
 #ifdef UseSendPosPool
 	if (sendPosPool.size() > 0)
 	{
@@ -1019,16 +1046,96 @@ else if (shaderStrIdx == ShaderPencilIndex::PencilClr)  //
 #ifdef UseSpriteList
 		addSpriteList(pos.x, pos.y);
 #endif //#ifdef UseSpriteList
-
+		log("Pencil1:%d,%d,%d", pencilAction, sendPosPool_size_FirstLog, sendPosPool.size());
+		if (shaderStrIdx == ShaderPencilIndex::Pencil1 && pencilAction == PencilAction::PencilAction_End)
+		{
+			if (sendPosPool_size_FirstLog > 0 && sendPosPool.size() == 0)
+			{
+				checkDrawPencil1Finish(); //有可能DrawEnd并非是触摸结束，而是sendPosPool缓存在之后的update里面被清空（相差一帧）
+			}
+		}
 #endif //#ifdef UseSendPosPool
 	}
 }
 
+//画笔一 mouseEnded时候,或者update sendPosPool为空的时候
+void DrawLayer::pencil1DrawEnd()
+{
+	checkDrawPencil1Finish();
+}
+
+//判断是否已经一笔画结束了，条件：TouchEnd并且缓存没有了
+void DrawLayer::checkDrawPencil1Finish()
+{
+	if (shaderStrIdx == ShaderPencilIndex::Pencil1 && pencilAction == PencilAction::PencilAction_End)
+	{
+		if ( sendPosPool.size() == 0)
+		{
+			drawPencil1Finish(); //有可能DrawEnd并非是触摸结束，而是sendPosPool缓存在之后的update里面被清空（相差一帧）
+		}
+	}
+}
+
+void DrawLayer::drawPencil1Finish()
+{
+	//做法1：从rt内容生成一个Sprite,显示到界面,同时抹除rt
+	//打算做的：单独用一个TextureRender 给2个Sprite拍照混合，生成一个新的Texture2D->Sprite,即：每次混合2个Sprite到1个Sprite
+
+	if (rt)
+	{
+		auto showingSprite = this->getChildByTag(Tag_RenderTextureSprite);
+		if (showingSprite)
+		{
+			pencil1_spriteNum++;
+			//从rt内容生成一个Sprite
+			nimage = rt->newImage();
+			newt = new Texture2D();
+			newt->initWithImage(nimage);
+			lastrtsp = Sprite::createWithTexture(newt);
+			lastrtsp->setAnchorPoint(ccp(0, 0));
+			//this->removeChildByTag(Tag_RenderTextureSprite);  //删除上一个，每次只显示一个 rt 的sprite
+			this->addChild(lastrtsp, 0, Tag_RenderTextureSprite + pencil1_spriteNum);
+			lastrtsp->setPosition(ccp(0, 0));
+
+			//抹除rt
+			rt->beginWithClear(0, 0, 0, 0);
+			rt->end();
+			//清除显示纹理
+			this->removeChildByTag(Tag_RenderTextureSprite);  //删除用来显示的sprite
+			log("remove Tag_RenderTextureSprite");
+		}
+
+	}
+}
 
 //rendertexture
 void DrawLayer::updateRenderTexture()
 {
-	
+
+	//思路：
+	//1，用一个pencil(this->tsn)计算上次纹理和这次坐标的颜色混合，用一个texturerender(rt)显示画面和保存当前的纹理给sprite作为下次渲染用
+	//2,pencil并不显示到界面，每次visit被动触发，texturerender 有显示到界面，相当于：rt每次调用tsn->visit(),把visit内容映射到界面上
+	//3,由于texturerender显示带透明的的有问题，因此让texturerender visible = false,每次基于texturerender生成一个sprite用来显示到界面
+	//4,同时将3生成的sprite的纹理作为u_texture2参数发给pencil,以便下一帧混合使用
+	//5,u_texture2的作用是：将连贯笔画的轨迹内容用纹理形式保存下来，供新的点进行混合
+	//流程：每次tsn->visit基于纹理A为背景绘制新的几个或者一个坐标点，之后把整个纹理保存为A纹理进行下一轮鼠标滑动时候渲染使用
+	//其中整个纹理保存为A纹理是难点，目前使用rendertexture的思路，
+	//渲染流程，1:>tsn->visit,2:rt 拍照后显示到屏幕，3：将rt拍的照片的texture赋值给tsn的u_texture2 ， 4：tsn的shader代码进行颜色混合，5返回第一步
+	//现在问题是rt->begin tsn->visit rt->end的效果和rt->getSprite()的效果不同,也不是第四步代码想要的效果
+	//注：tsn并没有被addChild到界面上，是想通过visit() 显示在rt上面
+	//beginWithClear , clear + begin , begin 3种情况效果不同
+	//理论上每次都要 clear + begin ，然后tsn visit,然后获取tsn的纹理显示到屏幕上，再把纹理赋值给tsn的u_texture2,然后循环
+	//现象是：
+	//1,beginWithClear后rt有像素，tsn->visit后rt的getSprite有像素，但效果不同。
+	//2,clear + begin后rt和tsn->visit后rt的getSprite都无像素(???是否跟第一步无像素有关系)。
+	//,clear+begin模式还不行
+	//做法1:tsn负责渲染，不addchild, rt只负责拍照 addchild,visible(false),每次rt->beginWithClear(0, 0, 0, 0);
+	//拍照后新建一个Sprite拷贝rt内容，显示到界面上，下一帧新建之前先删除旧的显示。
+	//做法2：rt又负责拍照又负责显示，addchild,visible(true),每次rt->begin（）。这种模式有问题，透明度不对，rt->getSprite()Y轴也是反的
+	//新的思路(未实现)：
+	//每次连贯的笔画都生成一张Sprite,结束后和之前的Sprite进行混合。即：有2张Sprite,每次画上面一张内容，底下那张Sprite不动，结束后，进行上下混合，合并到底下那张。
+	//存在的问题：rt直接显示内容和rt生成的sprite内容透明度不同，sprite更加真实，目前用这种；另外每次下笔第一帧有延迟上一次最后一次坐标
+	//目前采用：做法1
 	if (this->tsn)
 	{
 		auto size = Director::sharedDirector()->getWinSize();
@@ -1044,8 +1151,12 @@ void DrawLayer::updateRenderTexture()
 			//rt->end();
 			//this->addChild(sp);
 
-			this->addChild(rt, 0, Tag_RenderTexture);
-			rt->setVisible(false);
+			this->addChild(rt, 1, Tag_RenderTexture);
+			//rt->setOpacity(0.3);
+			//CCRenderTexture 只负责绘制内容，本身并不用来显示
+			
+			//BlendFunc bf = { GL_ZERO, GL_ONE };
+			//rt->getSprite()->setBlendFunc(bf);
 			//GL_ZERO, GL_DST_ALPHA  GL_SRC_ALPHA
 			//GL_ONE, GL_ZERO 有颜色 周边部分是黑的
 			//GL_DST_ALPHA, GL_ZERO 有半透明颜色 周边是黑的
@@ -1057,7 +1168,7 @@ void DrawLayer::updateRenderTexture()
 		}
 		//CCRenderTexture * rt = CCRenderTexture::create(size.width, size.height);
 		rt->setPosition(ccp(size.width / 2, size.height / 2));
-
+		rt->setVisible(true);
 		//传递当前已经渲染的部分,当前纹理
 		switch (shaderStrIdx)
 		{
@@ -1092,17 +1203,18 @@ void DrawLayer::updateRenderTexture()
 				//lastrtsp->release();
 			}
 			
-			
-
-			nimage = rt->newImage();
+			rt->setVisible(false);
+			//做法1：从rt内容生成一个Sprite,显示到界面
+			nimage = rt->newImage(); //默认翻转
 			newt = new Texture2D();
 			newt->initWithImage(nimage);
-			lastrtsp = Sprite::createWithTexture(newt);
+			lastrtsp = Sprite::createWithTexture(newt); //newt
 			lastrtsp->setAnchorPoint(ccp(0, 0));
 			this->removeChildByTag(Tag_RenderTextureSprite);  //删除上一个，每次只显示一个 rt 的sprite
 			this->addChild(lastrtsp, 0, Tag_RenderTextureSprite);
-			lastrtsp->setPosition(ccp(0,0));  //做一点偏移，和rt像素区别开
-
+			lastrtsp->setPosition(ccp(0,0));  
+			log("add Tag_RenderTextureSprite");
+			
 			/*lastrtsp = Sprite::createWithSpriteFrame(rt->getSprite()->displayFrame());
 			lastrtsp->setAnchorPoint(ccp(0, 0));
 			this->removeChildByTag(Tag_RenderTextureSprite);
@@ -1143,27 +1255,16 @@ void DrawLayer::updateRenderTexture()
 			break;
 		}
 		//blendfunc 1
-		ccBlendFunc originalBlend = ((Sprite*)(this->tsn))->getBlendFunc();
-		ccBlendFunc func = { GL_ZERO, GL_ONE }; //GL_SRC_ALPHA, GL_ONE
-		((Sprite*)(this->tsn))->setBlendFunc(func);
-
-		//思路：
-		//1，用一个sprite计算上次纹理和这次坐标的颜色混合，用一个texturerender显示画面和保存当前的纹理给sprite作为下次渲染用
-		//2,sprite并不显示到界面，每次visit被动触发，texturerender 有显示到界面
-		//3,由于texturerender显示带透明的的有问题，因此让texturerender visible = false,每次基于texturerender生成一个sprite用来显示到界面
-		//流程：每次tsn->visit基于纹理A为背景绘制新的几个或者一个坐标点，之后把整个纹理保存为A纹理进行下一轮鼠标滑动时候渲染使用
-		//其中整个纹理保存为A纹理是难点，目前使用rendertexture的思路，
-		//渲染流程，1:>tsn->visit,2:rt 拍照后显示到屏幕，3：将rt拍的照片的texture赋值给tsn的u_texture2 ， 4：tsn的shader代码进行颜色混合，5返回第一步
-		//现在问题是rt->begin tsn->visit rt->end的效果和rt->getSprite()的效果不同,也不是第四步代码想要的效果
-		//注：tsn并没有被addChild到界面上，是想通过visit() 显示在rt上面
-		//beginWithClear , clear + begin , begin 3种情况效果不同
-		//理论上每次都要 clear + begin ，然后tsn visit,然后获取tsn的纹理显示到屏幕上，再把纹理赋值给tsn的u_texture2,然后循环
-		//现象是：
-		//1,beginWithClear后rt有像素，tsn->visit后rt的getSprite有像素，但效果不同。
-		//2,clear + begin后rt和tsn->visit后rt的getSprite都无像素(???是否跟第一步无像素有关系)。
-		//问题：
-		//1，一下多个点的时候重叠区域会变成白色
-		//,clear+begin模式还不行
+		auto pencil = (dynamic_cast<Sprite*>(this->tsn));
+		if (pencil)
+		{
+			ccBlendFunc originalBlend = pencil->getBlendFunc();
+			//GL_ZERO, GL_ONE //正常
+			//BlendFunc::ALPHA_NON_PREMULTIPLIED = {GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA};
+			ccBlendFunc func = { GL_ONE, GL_ZERO }; //GL_SRC_ALPHA, GL_ONE,GL_ZERO
+			pencil->setBlendFunc(func);
+		}
+		
 
 		rt->beginWithClear(0, 0, 0, 0);
 		//rt->clear(0, 0, 0, 0);
@@ -1171,9 +1272,17 @@ void DrawLayer::updateRenderTexture()
 
 		//if (lastrtsp)
 			//lastrtsp->visit();
+		//log("visit");
 		this->tsn->visit();
+		//log("visit end");
 		//this->removeChildByTag(500);
 		//this->addChild(sp, 10, 500);
+		//orange_edit
+		/*auto spr = Sprite::create("cocosui/orange_edit.png");
+		spr->setPosition(ccp(200,200));
+		spr->setOpacity(10);
+		spr->visit();*/
+
 		rt->end();
 
 		if (nimage)
@@ -1209,6 +1318,7 @@ void DrawLayer::updateRenderTexture()
 		scpy->setFlipY(true);
 		scpy->setAnchorPoint(ccp(0, 0));
 		*/
+		log("updateTextureRender end");
 	}
 
 }
