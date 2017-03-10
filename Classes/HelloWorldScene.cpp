@@ -1,11 +1,14 @@
 #include "HelloWorldScene.h"
 #include "MainLayer.h"
+#include "EraserLayer.h"
+#include "../cctest/TestLayer.h"
+
 USING_NS_CC;
 
 //#if(CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 //#define mLog(...) __android_log_print(ANDROID_LOG_DEBUG,"cocos2d-x", __VA_ARGS__)
 //#endif
-
+#define TEST false
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
@@ -76,9 +79,24 @@ bool HelloWorld::init()
     //// add the sprite as a child to this layer
     //this->addChild(sprite, 0);
     
-	auto layer = MainLayer::create();
-	this->addChild(layer, 1);
+	
 	//layer->setPosition(Vec2(100,100));
+
+	if (TEST)
+	{
+		auto moves = Sprite::create("CloseNormal.png");
+		moves->setPosition(Vec2(50, 300));
+		addChild(moves);
+		moves->runAction(MoveTo::create(10, Vec2(1080, 300)));
+	}
+	else
+	{
+		auto layer = EraserLayer::create(); //MainLayer TestLayer EraserLayer
+
+		this->addChild(layer, 1);
+	}
+	
+
     return true;
 }
 
@@ -90,7 +108,19 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
     return;
 #endif
 
-    Director::getInstance()->end();
+	if (TEST)
+	{
+		auto layer = TestLayer::create(); //MainLayer TestLayer
+
+		this->addChild(layer, 1);
+	}
+	else
+	{
+		Director::getInstance()->end();
+	}
+
+	
+    //Director::getInstance()->end();
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
     exit(0);

@@ -13,7 +13,8 @@ bool DrawLayer::init()
 	{
 		initShaderPencils();
 		//bg
-		LayerColor* lc = LayerColor::create(Color4B(100,100,100,150),960,640);
+		auto s = Director::getInstance()->getWinSize();
+		LayerColor* lc = LayerColor::create(Color4B(100,100,100,150),s.width,s.height);
 		addChild(lc);
 		drawNode();  //自带画点
 		#ifndef BeiZerTest
@@ -46,7 +47,7 @@ void DrawLayer::initShaderPencils()
 	pencil1->setContentSize(Size(s.width / 2, s.height / 2));
 
 	//这个初始化时间较长
-	/*szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL10.fsh");
+	szone = SZone::SZoneWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_Draw_DL10.fsh");
 	log("szone");
 	szone->retain();
 	szone->setPosition(Vec2(s.width / 4, s.height / 4));
@@ -56,7 +57,7 @@ void DrawLayer::initShaderPencils()
 	log("pencilClr");
 	pencilClr->retain();
 	pencilClr->setPosition(Vec2(s.width / 4, s.height / 4));
-	pencilClr->setContentSize(Size(s.width / 2, s.height / 2));*/
+	pencilClr->setContentSize(Size(s.width / 2, s.height / 2));
 }
 
 //这个函数不用，用initShaderPencils()
@@ -410,6 +411,10 @@ void DrawLayer::drawNode()
 //如果开启缓存模式，pos会被放入sendPosPool，然后每次update取一个发送到shader
 void DrawLayer::sendSnPos(Vec2 pos)
 {
+	if(! SendPosToShader)
+	{
+		return;
+	}
 #ifndef UseSendPosPool
 	auto sn = this->tsn;
 	if (sn)
@@ -455,16 +460,17 @@ void DrawLayer::sendSnPos(Vec2 pos)
 	
 }
 
-void DrawLayer::drawPoint(Vec2 pos, bool draw)
+//drawNow：是否立即就画
+void DrawLayer::drawPoint(Vec2 pos, bool drawNow)
 {
 	//log("drawPoint:%f,%f", pos.x, pos.y);
-	if (draw)
+	if (drawNow)
 	{
 		DrawNode* node = (DrawNode*)(this->getChildByTag(Tag_Node));
 		if (node)
 		{
 #ifdef drawSendMousePath
-			node->drawPoint(pos, 1.0f, Color4F(1.0, 1.0, 0, 1.0)); //画出发送给shader的点		
+			node->drawPoint(pos, 2.0f, Color4F(1.0, 0.0, 1.0, 1.0)); //画出发送给shader的点		
 #endif
 		}
 		sendSnPos(pos);  //发送给shader

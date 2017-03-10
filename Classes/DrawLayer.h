@@ -14,7 +14,8 @@ USING_NS_CC;
 #define UseRenderTexture  //使用RenderTexture
 //#define UseSpriteList  //使用UseSpriteList
 //#define ShowShaderLayer  //显示shader层
-//#define drawSendMousePath  //绘制优化完的点,发给shader层的平均点
+#define drawSendMousePath  //绘制优化完的点,鼠标经过的平均点
+#define SendPosToShader false  //是否启动shader笔刷
 #define AvgPtLen 1.0f  //绘制优化完的点间距，即笔刷密度
 #define UseSendPosPool //使用发送坐标池,不立即发送，用缓存
 #define UseSendPosPool_OnceAll  //一次发送池内全部内容
@@ -71,7 +72,7 @@ protected:
 	void addUI();
 	void addShaderNode();
 	void removeShaderNode();
-	void drawPoint(Vec2 pos,bool draw = false);
+	void drawPoint(Vec2 pos, bool drawNow = false);
 	void drawMatrix();
 	void drawByDir(int dir, Vec2 mousepos);
 	void drawByAngle( Vec2 mousepos); //根据任意角度画平均分布的点
