@@ -5,7 +5,7 @@
 //RenderTexture 背后还有背景图片等等
 EraserLayer::~EraserLayer()
 {
-	eraserOther->release();
+	eraserPencil->release();
 	spriteBG->release();
 }
 
@@ -19,8 +19,8 @@ bool EraserLayer::init()
 	this->addChild(bgSP);
 
 	//创建一个橡皮擦  
-	eraserOther = Sprite::create("hole_effect.png"); //hole_effect eraser
-	eraserOther->retain();
+	eraserPencil = Sprite::create("hole_effect.png"); //hole_effect eraser
+	eraserPencil->retain();
 
 	//创建画布，并显示  
 	rTex = RenderTexture::create(visibleSize.width, visibleSize.height);
@@ -63,19 +63,20 @@ bool EraserLayer::init()
 
 		//将橡皮设置到点击的位置  
 		Vec2 touchPoint = touch->getLocation();
-		eraserOther->setPosition(touchPoint);
+		eraserPencil->setPosition(touchPoint);
 
 		//设置混合方式  
 		//BlendFunc blendFunc = { GL_ONE_MINUS_SRC_ALPHA, GL_ZERO }; //GL_ONE, GL_ZERO  | GL_ZERO, GL_SRC_ALPHA |GL_ONE_MINUS_SRC_ALPHA,GL_ZERO
-		//eraserOther->setBlendFunc(blendFunc);
+		//eraserPencil->setBlendFunc(blendFunc);
 
+		//GL_DST_ALPHA, GL_ZERO ：GL_DST_ALPHA*self.color  +  GL_ZERO*pencil.color
 		BlendFunc blendFunc1 = { GL_DST_ALPHA, GL_ZERO }; //GL_ONE, GL_ZERO  | GL_ZERO, GL_SRC_ALPHA |GL_ONE_MINUS_SRC_ALPHA,GL_ZERO
 		spriteBG->setBlendFunc(blendFunc1);
 
 		//开擦！  
 		rTex->begin();
-		eraserOther->visit();
-		spriteBG->visit();
+		eraserPencil->visit(); //target
+		spriteBG->visit(); //src
 		rTex->end();
 	};
 

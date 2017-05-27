@@ -91,7 +91,8 @@ bool HelloWorld::init()
 	}
 	else
 	{
-		auto layer = EraserLayer::create(); //MainLayer TestLayer EraserLayer
+		//MainLayer TestLayer EraserLayer
+		auto layer = MainLayer::create(); //MainLayer TestLayer EraserLayer
 
 		this->addChild(layer, 1);
 	}

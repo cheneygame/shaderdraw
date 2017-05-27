@@ -13,9 +13,9 @@ USING_NS_CC;
 //#define drawCCSMousePath  //绘制cocos鼠标点
 #define UseRenderTexture  //使用RenderTexture
 //#define UseSpriteList  //使用UseSpriteList
-//#define ShowShaderLayer  //显示shader层
-#define drawSendMousePath  //绘制优化完的点,鼠标经过的平均点
-#define SendPosToShader false  //是否启动shader笔刷
+//#define ShowShaderLayer   //显示shader层
+#define drawSendMousePath false  //绘制鼠标经过的平均点(优化过的点)
+#define SendPosToShader true  //是否启动shader笔刷 ,（false,看不见shader内容）
 #define AvgPtLen 1.0f  //绘制优化完的点间距，即笔刷密度
 #define UseSendPosPool //使用发送坐标池,不立即发送，用缓存
 #define UseSendPosPool_OnceAll  //一次发送池内全部内容

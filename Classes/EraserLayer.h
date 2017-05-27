@@ -23,7 +23,7 @@ public:
 protected:
 
 private:
-	Sprite* eraserOther;    //ÏğÆ¤  
+	Sprite* eraserPencil;    //ÏğÆ¤  
 	RenderTexture* rTex;    //»­²¼ 
 	Sprite* spriteBG;
 };

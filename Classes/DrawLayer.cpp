@@ -90,6 +90,7 @@ void DrawLayer::drawShader()
 	//shadertoy_Draw_DL10 ,封闭区域 + 边缘线段
 	//shadertoy_Draw_YH9 shadertoy_Draw_YH7,clear笔刷
 	//shadertoy_Draw_YH8，shadertoy_Draw_YH6，颜色笔刷
+	//shadertoy_mario mario
 	auto sn = ShaderNode::shaderNodeWithVertex("Shaders/example_MultiTexture.vsh", "Shaders/shadertoy_mario.fsh"); //shadertoy_Draw_YH6 shadertoy_mario shadertoy_sea
 
 	auto s = Director::getInstance()->getWinSize();
@@ -469,9 +470,10 @@ void DrawLayer::drawPoint(Vec2 pos, bool drawNow)
 		DrawNode* node = (DrawNode*)(this->getChildByTag(Tag_Node));
 		if (node)
 		{
-#ifdef drawSendMousePath
-			node->drawPoint(pos, 2.0f, Color4F(1.0, 0.0, 1.0, 1.0)); //画出发送给shader的点		
-#endif
+			if(drawSendMousePath){
+				node->drawPoint(pos, 2.0f, Color4F(1.0, 0.0, 1.0, 1.0)); //画出发送给shader的点		
+			}
+
 		}
 		sendSnPos(pos);  //发送给shader
 	}
